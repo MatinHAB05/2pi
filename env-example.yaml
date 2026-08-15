@@ -1,0 +1,4 @@
+bot-token:
+  token: 123123...:....
+debug:
+  flag: true
