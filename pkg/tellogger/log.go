@@ -1,4 +1,4 @@
-package tellog
+package tellogger
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ func formatTelegramJSON(rawJSON string) string {
 }
 
 func NewLogger(cmdLog bool) (Logger, CloseFileLogger) {
-	logsDir := "logs"
+	logsDir := "logs/telegram"
 	if err := os.MkdirAll(logsDir, 0755); err != nil {
 		log.Fatalf("ERR: Failed to create logs directory: %v", err)
 	}

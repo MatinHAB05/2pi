@@ -25,11 +25,12 @@ go.work
 go.work.sum
 
 # env file
-env.yaml
+.env
 
 # Editor/IDE
 .idea/
 .vscode/
 
 # logs
-logs/
+logs/app/*
+logs/telegram/*

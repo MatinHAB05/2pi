@@ -1,0 +1,25 @@
+package config
+
+import (
+	"fmt"
+)
+
+type Config struct {
+	Constant    *Constant    `json:"constant"`
+	Environment *Environment `json:"environment"`
+}
+
+func Load() *Config {
+	return &Config{
+		Constant:    NewConstant(),
+		Environment: NewEnvironment(),
+	}
+}
+
+func (c *Config) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+
+	return fmt.Sprintf("Config{\n  Constant: %s,\n  Environment: %s\n}", c.Constant, c.Environment)
+}

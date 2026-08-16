@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/MatinHAB05/reminder/handler"
+	"github.com/MatinHAB05/reminder/intrenal/presentation/handler"
 	"github.com/go-telegram/bot"
 )
 
