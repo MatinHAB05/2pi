@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/MatinHAB05/reminder/config"
-	"github.com/MatinHAB05/reminder/internal/infrastructure/database"
+	"github.com/MatinHAB05/2pi/config"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"github.com/casbin/casbin/v3"
 	"github.com/casbin/casbin/v3/model"
 	gormadapter "github.com/casbin/gorm-adapter/v3"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MatinHAB05/reminder/internal/domain/entity"
-	repository_contract "github.com/MatinHAB05/reminder/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
+	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 )
 
 type permissionRule struct {

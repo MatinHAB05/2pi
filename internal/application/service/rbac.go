@@ -3,10 +3,9 @@ package service
 import (
 	"context"
 
-	repository_contract "github.com/MatinHAB05/reminder/internal/domain/repository"
-	"github.com/MatinHAB05/reminder/pkg/logger"
+	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/pkg/logger"
 )
-
 
 type rbacService struct {
 	repo   repository_contract.RBACRepository

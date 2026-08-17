@@ -1,4 +1,4 @@
-module github.com/MatinHAB05/reminder
+module github.com/MatinHAB05/2pi
 
 go 1.26.3
 

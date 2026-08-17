@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 
-	service_contract "github.com/MatinHAB05/reminder/internal/application/contract"
-	"github.com/MatinHAB05/reminder/internal/domain/entity"
-	repository_contract "github.com/MatinHAB05/reminder/internal/domain/repository"
-	"github.com/MatinHAB05/reminder/pkg/logger"
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
+	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/pkg/logger"
 )
 
 type userService struct {

@@ -3,9 +3,9 @@ package repository
 import (
 	"fmt"
 
-	repository_contract "github.com/MatinHAB05/reminder/internal/domain/repository"
-	"github.com/MatinHAB05/reminder/internal/infrastructure/database"
-	"github.com/MatinHAB05/reminder/internal/infrastructure/rbac"
+	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
 )
 
 type rbacRepository struct {

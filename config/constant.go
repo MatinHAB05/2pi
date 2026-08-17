@@ -38,7 +38,7 @@ func (c *Constant) String() string {
 
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return fmt.Sprintf("Constant{Database:%+v, User:%+v, Redis:%+v}",
+		return fmt.Sprintf("Constant{Database:%+v, Redis:%+v}",
 			c.Database, c.Redis)
 	}
 

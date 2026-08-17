@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/MatinHAB05/reminder/config"
+	"github.com/MatinHAB05/2pi/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

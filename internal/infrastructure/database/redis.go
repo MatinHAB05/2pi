@@ -6,7 +6,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/MatinHAB05/reminder/config"
+	"github.com/MatinHAB05/2pi/config"
 	"github.com/redis/go-redis/v9"
 )
 

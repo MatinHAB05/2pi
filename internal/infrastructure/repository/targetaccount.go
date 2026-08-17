@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/MatinHAB05/reminder/internal/domain/entity"
-	"github.com/MatinHAB05/reminder/internal/domain/exception"
-	repository_contract "github.com/MatinHAB05/reminder/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
+	"github.com/MatinHAB05/2pi/internal/domain/exception"
+	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 	"gorm.io/gorm"
 )
 

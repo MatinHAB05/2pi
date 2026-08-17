@@ -3,7 +3,7 @@ package repository_contract
 import (
 	"context"
 
-	"github.com/MatinHAB05/reminder/internal/domain/entity"
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
 )
 
 type UserRepository interface {

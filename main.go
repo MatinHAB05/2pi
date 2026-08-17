@@ -7,11 +7,11 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/MatinHAB05/reminder/config"
-	"github.com/MatinHAB05/reminder/internal/presentation/handler"
-	"github.com/MatinHAB05/reminder/internal/presentation/router"
-	"github.com/MatinHAB05/reminder/pkg/logger"
-	"github.com/MatinHAB05/reminder/pkg/tellogger"
+	"github.com/MatinHAB05/2pi/config"
+	"github.com/MatinHAB05/2pi/internal/presentation/handler"
+	"github.com/MatinHAB05/2pi/internal/presentation/router"
+	"github.com/MatinHAB05/2pi/pkg/logger"
+	"github.com/MatinHAB05/2pi/pkg/tellogger"
 	"github.com/go-telegram/bot"
 )
 
