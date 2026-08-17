@@ -10,6 +10,9 @@ type Handlers struct {
 }
 
 func NewRouter(b *bot.Bot, handlers *Handlers) *bot.Bot {
-
+	b.RegisterHandler(bot.HandlerTypeMessageText,"/start",bot.MatchTypeExact,handlers.BasicHandler.Start)
+	b.RegisterHandler(bot.HandlerTypeMessageText,"/help",bot.MatchTypeExact,handlers.BasicHandler.Help)
+	b.RegisterHandler(bot.HandlerTypeMessageText,"/setting",bot.MatchTypeExact,handlers.BasicHandler.Setting)
+	
 	return b
 }
