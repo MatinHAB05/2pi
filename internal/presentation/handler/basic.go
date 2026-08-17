@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 
-	"github.com/MatinHAB05/reminder/intrenal/presentation/ui/translation"
+	"github.com/MatinHAB05/reminder/internal/presentation/ui/translation"
 	"github.com/MatinHAB05/reminder/pkg/logger"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"

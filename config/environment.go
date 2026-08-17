@@ -13,6 +13,7 @@ type Environment struct {
 	DataBase         DataBase         `mapstructure:",squash" json:"database"`
 	Redis            Redis            `mapstructure:",squash" json:"redis"`
 	Logger           LoggerConfig     `mapstructure:",squash" json:"logger"`
+	Casbin           Casbin           `mapstructure:",squash" json:"casbin"`
 }
 
 type BotToken struct {
@@ -25,7 +26,7 @@ type DebugModeOptions struct {
 
 type DataBase struct {
 	Host     string `mapstructure:"PDB_HOST"     json:"host"`
-	Port     string `mapstructure:"PDB_PORT"     json:"port"`
+	Port     int    `mapstructure:"PDB_PORT"     json:"port"`
 	User     string `mapstructure:"PDB_USER"     json:"user"`
 	Password string `mapstructure:"PDB_PASSWORD" json:"password"`
 	Name     string `mapstructure:"PDB_DB_NAME"  json:"name"`
@@ -34,16 +35,20 @@ type DataBase struct {
 
 type Redis struct {
 	Host      string `mapstructure:"RDB_HOST"      json:"host"`
-	Port      string `mapstructure:"RDB_PORT"      json:"port"`
+	Port      int    `mapstructure:"RDB_PORT"      json:"port"`
 	Password  string `mapstructure:"RDB_PASSWORD"  json:"password"`
-	RDBNumber string `mapstructure:"RDB_DB_NUMBER" json:"db"`
+	RDBNumber int    `mapstructure:"RDB_DB_NUMBER" json:"db"`
 }
 
 type LoggerConfig struct {
-	FilePath string `json:"file_path" mapstructure:"LOGGER_FILE_PATH"`
-	Encoding string `json:"encoding" mapstructure:"LOGGER_ENCODING"`
-	Level    string `json:"level" mapstructure:"LOGGER_LEVEL"`
-	Logger   string `json:"logger" mapstructure:"LOGGER_NAME"`
+	FilePath string `mapstructure:"LOGGER_FILE_PATH" json:"file_path"`
+	Encoding string `mapstructure:"LOGGER_ENCODING"  json:"encoding"`
+	Level    string `mapstructure:"LOGGER_LEVEL"     json:"level"`
+	Logger   string `mapstructure:"LOGGER_NAME"      json:"logger"`
+}
+
+type Casbin struct {
+	ModelConfigFilePath string `mapstructure:"CASBIN_MODEL_PATH" json:"model_path"`
 }
 
 func NewEnvironment() *Environment {

@@ -8,8 +8,8 @@ import (
 	"os/signal"
 
 	"github.com/MatinHAB05/reminder/config"
-	"github.com/MatinHAB05/reminder/intrenal/presentation/handler"
-	"github.com/MatinHAB05/reminder/intrenal/presentation/router"
+	"github.com/MatinHAB05/reminder/internal/presentation/handler"
+	"github.com/MatinHAB05/reminder/internal/presentation/router"
 	"github.com/MatinHAB05/reminder/pkg/logger"
 	"github.com/MatinHAB05/reminder/pkg/tellogger"
 	"github.com/go-telegram/bot"

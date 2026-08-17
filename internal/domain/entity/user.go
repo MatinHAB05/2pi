@@ -12,6 +12,5 @@ type User struct {
 	BaseEntity
 
 	// Relations
-	Usernames []Username
-	Roles     []Role `gorm:"many2many:user_roles;"`
+	TargetAccounts []TargetAccount `gorm:"foreignKey:OwnerUserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
