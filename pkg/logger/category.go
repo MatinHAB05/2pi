@@ -18,8 +18,9 @@ const (
 
 // SubCategories
 const (
-	MPanic  SubCategory = "Recovery-Middleware"
-	LoggerM SubCategory = "Logger-Middleware"
+	MPanic          SubCategory = "Recovery-Middleware"
+	LoggerM         SubCategory = "Logger-Middleware"
+	ExternalService SubCategory = "External"
 
 	// General
 	Startup SubCategory = "Startup"

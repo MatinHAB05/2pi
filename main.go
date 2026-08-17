@@ -8,6 +8,10 @@ import (
 	"os/signal"
 
 	"github.com/MatinHAB05/2pi/config"
+	"github.com/MatinHAB05/2pi/internal/application/service"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/repository"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/router"
@@ -48,8 +52,42 @@ func main() {
 	appLogger.Info(logger.General, logger.Startup, "starting application bootstrapping", nil)
 
 	// --- DATABASES CONNECTIONS ---
-	// pgDB := database.NewPostgresDatabase(&config.Environment.DataBase, &config.Constant.Database)
-	// redisClient := database.NewRedisDatabase(&config.Environment.Redis, &config.Constant.Redis)
+	pgDB := database.NewPostgresDatabase(&config.Environment.DataBase, &config.Constant.Database)
+	redisClient := database.NewRedisDatabase(&config.Environment.Redis, &config.Constant.Redis)
+
+	// --- STATICS ---
+	// statics, err := static.InitStaticFiles()
+	// if err != nil {
+	// 	appLogger.Fatal(logger.General, logger.Startup, "failed to initialize static files", map[logger.ExtraKey]interface{}{
+	// 		logger.ErrorMessage: err.Error(),
+	// 	})
+	// }
+
+	// --- EMAIL SENDER ---
+	// emailSender := mail.NewMailer(mail.EmailConfig{
+	// 	From:     config.Environment.Email.TwoPiEmail,
+	// 	Password: config.Environment.Email.TwoPiEmailAppPassword,
+	// 	SMTPHost: config.Environment.Email.SMTPHost,
+	// 	SMTPPort: config.Environment.Email.SMTPPort,
+	// })
+
+	// casbin
+	rbacEnf := rbac.NewCasbin(&config.Environment.Casbin, pgDB)
+
+	// repos
+	userRepo := repository.NewUserRepository(pgDB)
+	rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
+	targetaccountRepo := repository.NewTargetAccountRepository(pgDB)
+	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient, userRepo)
+	rs := router.Repos{
+		UserAccCache: useracccahceRepo,
+	}
+
+	// services
+	userSrv := service.NewUserService(userRepo, appLogger)
+	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
+	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
+	ss := router.Services{}
 
 	// register handlers
 	basicHandler := handler.NewBasicHandler(appLogger)
@@ -75,7 +113,7 @@ func main() {
 	}
 
 	// register router
-	router.NewRouter(b, &hs)
+	router.NewRouter(b, &hs, &ss, &rs, appLogger)
 
 	// start
 	fmt.Println("Bot is running...")

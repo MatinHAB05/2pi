@@ -10,4 +10,6 @@ var (
 	ErrEmptyTargetAccount    = errors.New("target account ID cannot be empty")
 	ErrEmptyRole             = errors.New("role cannot be empty")
 	ErrEmptyAction           = errors.New("action cannot be empty")
+	ErrUserIDNotFound        = errors.New("user_id missing from context")
+	ErrInvalidUserIDType     = errors.New("user_id in context has invalid type")
 )

@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	tokenCtx "github.com/MatinHAB05/2pi/internal/domain/context"
-
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/domain/tokencontext"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -30,13 +29,18 @@ func Authentication(userAccCache repository_contract.UserAccountCacheRepository,
 				return
 			}
 
-			ctx = context.WithValue(ctx, tokenCtx.UserIDKey, userID)
-			if true {
-				// Intaccid, err := strconv.Atoi(account[0])
-				// Intaccid, err := strconv.Atoi(account[0])
-				// ctx = context.WithValue(ctx, tokenCtx.UserIDKey, Intaccid)
-				// ctx = context.WithValue(ctx, tokenCtx.UserIDKey, account[0].owner)
+			var token tokencontext.AuthenticationContextToken = tokencontext.AuthenticationContextToken{
+				UserId:         userID,
+				AccountID:      nil,
+				AccountOwnerID: nil,
 			}
+
+			if account != nil {
+				token.AccountID = &account.AccountID
+				token.AccountOwnerID = &account.AccountOwnerID
+			}
+
+			tokencontext.SetTokenInContext(ctx, &token)
 
 			next(ctx, b, update)
 		}

@@ -14,6 +14,7 @@ type Environment struct {
 	Redis            Redis            `mapstructure:",squash" json:"redis"`
 	Logger           LoggerConfig     `mapstructure:",squash" json:"logger"`
 	Casbin           Casbin           `mapstructure:",squash" json:"casbin"`
+	Email            EmailConfig      `mapstructure:",squash" json:"email"`
 }
 
 type BotToken struct {
@@ -49,6 +50,13 @@ type LoggerConfig struct {
 
 type Casbin struct {
 	ModelConfigFilePath string `mapstructure:"CASBIN_MODEL_PATH" json:"model_path"`
+}
+
+type EmailConfig struct {
+	TwoPiEmail            string `mapstructure:"TWO_PI_EMAIL"              json:"2pi_email"`
+	TwoPiEmailAppPassword string `mapstructure:"TWO_PI_EMAIL_APP_PASSWORD" json:"2pi_email_app_password"`
+	SMTPHost              string `mapstructure:"SMTP_HOST"                        json:"smtp_host"`
+	SMTPPort              string `mapstructure:"SMTP_HOST_PORT"                   json:"smtp_host_port"`
 }
 
 func NewEnvironment() *Environment {

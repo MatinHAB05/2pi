@@ -7,24 +7,25 @@ import (
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	"github.com/MatinHAB05/2pi/internal/domain/exception"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"gorm.io/gorm"
 )
 
 type userRepository struct {
-	db *gorm.DB
+	db database.Database
 }
 
-func NewUserRepository(db *gorm.DB) repository_contract.UserRepository {
+func NewUserRepository(db database.Database) repository_contract.UserRepository {
 	return &userRepository{db: db}
 }
 
 func (r *userRepository) Create(ctx context.Context, user *entity.User) error {
-	return r.db.WithContext(ctx).Create(user).Error
+	return r.db.GetDB().WithContext(ctx).Create(user).Error
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id int64) (*entity.User, error) {
 	var user entity.User
-	err := r.db.WithContext(ctx).First(&user, id).Error
+	err := r.db.GetDB().WithContext(ctx).First(&user, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, exception.ErrUserNotFound
 	}
@@ -33,7 +34,7 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*entity.User, e
 
 func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id int64) (*entity.User, error) {
 	var user entity.User
-	err := r.db.WithContext(ctx).
+	err := r.db.GetDB().WithContext(ctx).
 		Preload("TargetAccounts").
 		First(&user, id).
 		Error
@@ -45,11 +46,11 @@ func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id int64) (*
 }
 
 func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
-	return r.db.WithContext(ctx).Save(user).Error
+	return r.db.GetDB().WithContext(ctx).Save(user).Error
 }
 
 func (r *userRepository) Delete(ctx context.Context, id int64) error {
-	result := r.db.WithContext(ctx).Delete(&entity.User{}, id)
+	result := r.db.GetDB().WithContext(ctx).Delete(&entity.User{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -61,7 +62,7 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 
 func (r *userRepository) Exists(ctx context.Context, id int64) (bool, error) {
 	var count int64
-	err := r.db.WithContext(ctx).
+	err := r.db.GetDB().WithContext(ctx).
 		Model(&entity.User{}).
 		Where("id = ?", id).
 		Count(&count).

@@ -7,24 +7,25 @@ import (
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	"github.com/MatinHAB05/2pi/internal/domain/exception"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"gorm.io/gorm"
 )
 
 type targetAccountRepository struct {
-	db *gorm.DB
+	db database.Database
 }
 
-func NewTargetAccountRepository(db *gorm.DB) repository_contract.TargetAccountRepository {
+func NewTargetAccountRepository(db database.Database) repository_contract.TargetAccountRepository {
 	return &targetAccountRepository{db: db}
 }
 
 func (r *targetAccountRepository) Create(ctx context.Context, target *entity.TargetAccount) error {
-	return r.db.WithContext(ctx).Create(target).Error
+	return r.db.GetDB().WithContext(ctx).Create(target).Error
 }
 
 func (r *targetAccountRepository) GetByID(ctx context.Context, id int64) (*entity.TargetAccount, error) {
 	var target entity.TargetAccount
-	err := r.db.WithContext(ctx).First(&target, id).Error
+	err := r.db.GetDB().WithContext(ctx).First(&target, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, exception.ErrTargetAccountNotFound
 	}
@@ -33,7 +34,7 @@ func (r *targetAccountRepository) GetByID(ctx context.Context, id int64) (*entit
 
 func (r *targetAccountRepository) GetByUsername(ctx context.Context, username string) (*entity.TargetAccount, error) {
 	var target entity.TargetAccount
-	err := r.db.WithContext(ctx).Where("username = ?", username).First(&target).Error
+	err := r.db.GetDB().WithContext(ctx).Where("username = ?", username).First(&target).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, exception.ErrTargetAccountNotFound
 	}
@@ -42,7 +43,7 @@ func (r *targetAccountRepository) GetByUsername(ctx context.Context, username st
 
 func (r *targetAccountRepository) GetByOwnerID(ctx context.Context, ownerUserID int64, limit, offset int) ([]entity.TargetAccount, error) {
 	var targets []entity.TargetAccount
-	query := r.db.WithContext(ctx).Where("owner_user_id = ?", ownerUserID)
+	query := r.db.GetDB().WithContext(ctx).Where("owner_user_id = ?", ownerUserID)
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -57,7 +58,7 @@ func (r *targetAccountRepository) GetByOwnerID(ctx context.Context, ownerUserID 
 
 func (r *targetAccountRepository) GetByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) (*entity.TargetAccount, error) {
 	var target entity.TargetAccount
-	err := r.db.WithContext(ctx).
+	err := r.db.GetDB().WithContext(ctx).
 		Where("id = ? AND owner_user_id = ?", id, ownerUserID).
 		First(&target).
 		Error
@@ -69,11 +70,11 @@ func (r *targetAccountRepository) GetByIDAndOwnerID(ctx context.Context, id int6
 }
 
 func (r *targetAccountRepository) Update(ctx context.Context, target *entity.TargetAccount) error {
-	return r.db.WithContext(ctx).Save(target).Error
+	return r.db.GetDB().WithContext(ctx).Save(target).Error
 }
 
 func (r *targetAccountRepository) Delete(ctx context.Context, id int64) error {
-	result := r.db.WithContext(ctx).Delete(&entity.TargetAccount{}, id)
+	result := r.db.GetDB().WithContext(ctx).Delete(&entity.TargetAccount{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -84,7 +85,7 @@ func (r *targetAccountRepository) Delete(ctx context.Context, id int64) error {
 }
 
 func (r *targetAccountRepository) DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error {
-	result := r.db.WithContext(ctx).
+	result := r.db.GetDB().WithContext(ctx).
 		Where("id = ? AND owner_user_id = ?", id, ownerUserID).
 		Delete(&entity.TargetAccount{})
 
@@ -99,7 +100,7 @@ func (r *targetAccountRepository) DeleteByIDAndOwnerID(ctx context.Context, id i
 
 func (r *targetAccountRepository) CountByOwnerID(ctx context.Context, ownerUserID int64) (int64, error) {
 	var count int64
-	err := r.db.WithContext(ctx).
+	err := r.db.GetDB().WithContext(ctx).
 		Model(&entity.TargetAccount{}).
 		Where("owner_user_id = ?", ownerUserID).
 		Count(&count).

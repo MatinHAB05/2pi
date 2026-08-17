@@ -1,6 +1,5 @@
 package repository
 
-//BUG : replace string instead of set!!!!!! zero get check! +++ dto === account id , owner id
 import (
 	"context"
 	"errors"
@@ -29,62 +28,92 @@ func NewUserAccountCacheRepository(
 }
 
 func (ucr *useraccountcahceRepository) buildUserAccountCacheKey(userId string) string {
-	return fmt.Sprintf("user:%s:accounts", userId)
+	return fmt.Sprintf("user:%s:account", userId)
 }
 
 func (ucr *useraccountcahceRepository) CreateOrReplace(ctx context.Context, userId string, ttl time.Duration) error {
 	key := ucr.buildUserAccountCacheKey(userId)
 
-	err := ucr.Delete(ctx, userId)
+	// Clear existing cache key
+	if err := ucr.Delete(ctx, userId); err != nil {
+		return err
+	}
+
+	intUserId, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid user_id format: %w", err)
+	}
+
+	user, err := ucr.userRepo.GetWithTargetAccounts(ctx, intUserId)
 	if err != nil {
 		return err
 	}
-	intUserId, err := strconv.Atoi(userId)
-	if err != nil {
-		return fmt.Errorf("WTF:%w", err)
+
+	if len(user.TargetAccounts) == 0 {
+		return nil
 	}
 
-	user, err := ucr.userRepo.GetWithTargetAccounts(ctx, int64(intUserId))
-	if err != nil {
-		return err
-	}
-	accIds := make([]int64, len(user.TargetAccounts))
-	for i := 0; i < len(user.TargetAccounts); i++ {
-		accIds = append(accIds, user.TargetAccounts[i].ID)
+	// Single target account mapping
+	targetAcc := user.TargetAccounts[0]
+	fields := map[string]interface{}{
+		"account_id":       targetAcc.ID,
+		"account_owner_id": targetAcc.OwnerUserID,
 	}
 
-	if err := ucr.client.GetRDB().SAdd(ctx, key, accIds).Err(); err != nil {
-		return fmt.Errorf("redis save user-account error: %w", err)
+	// Store fields as Redis Hash
+	if err := ucr.client.GetRDB().HSet(ctx, key, fields).Err(); err != nil {
+		return fmt.Errorf("redis save user-account hash error: %w", err)
 	}
+
+	// Apply TTL if specified
+	if ttl > 0 {
+		if err := ucr.client.GetRDB().Expire(ctx, key, ttl).Err(); err != nil {
+			return fmt.Errorf("redis set expire error: %w", err)
+		}
+	}
+
 	return nil
 }
 
-func (ucr *useraccountcahceRepository) CreateOrReplaceGet(ctx context.Context, userId string, ttl time.Duration) ([]string, error) {
+func (ucr *useraccountcahceRepository) CreateOrReplaceGet(ctx context.Context, userId string, ttl time.Duration) (*repository_contract.UserAccountCache, error) {
 	if err := ucr.CreateOrReplace(ctx, userId, ttl); err != nil {
 		return nil, err
 	}
 
-	accs, err := ucr.Get(ctx, userId)
-	if err != nil {
-		return nil, err
-	}
-	return accs, nil
-
+	return ucr.Get(ctx, userId)
 }
 
-func (ucr *useraccountcahceRepository) Get(ctx context.Context, userId string) ([]string, error) {
+func (ucr *useraccountcahceRepository) Get(ctx context.Context, userId string) (*repository_contract.UserAccountCache, error) {
 	key := ucr.buildUserAccountCacheKey(userId)
 
-	accs, err := ucr.client.GetRDB().SMembers(ctx, key).Result()
-	if err != nil || len(accs) == 0 {
-		if errors.Is(err, redis.Nil) || len(accs) == 0 {
-			return []string{}, nil
+	res, err := ucr.client.GetRDB().HGetAll(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
 		}
-		return nil, fmt.Errorf("redis get user permissions error: %w", err)
+		return nil, fmt.Errorf("redis get user account error: %w", err)
 	}
 
-	return accs, nil
+	if len(res) == 0 {
+		return nil, nil
+	}
+
+	accountID, err := strconv.ParseInt(res["account_id"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account_id in redis: %w", err)
+	}
+
+	AccountOwnerID, err := strconv.ParseInt(res["account_owner_id"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account_owner_id in redis: %w", err)
+	}
+
+	return &repository_contract.UserAccountCache{
+		AccountID:      accountID,
+		AccountOwnerID: AccountOwnerID,
+	}, nil
 }
+
 func (ucr *useraccountcahceRepository) Delete(ctx context.Context, userId string) error {
 	key := ucr.buildUserAccountCacheKey(userId)
 
@@ -93,28 +122,27 @@ func (ucr *useraccountcahceRepository) Delete(ctx context.Context, userId string
 	}
 	return nil
 }
-func (ucr *useraccountcahceRepository) Exists(ctx context.Context, userId string) (*bool, error) {
+
+func (ucr *useraccountcahceRepository) Exists(ctx context.Context, userId string) (bool, error) {
 	key := ucr.buildUserAccountCacheKey(userId)
 
 	count, err := ucr.client.GetRDB().Exists(ctx, key).Result()
 	if err != nil {
-		return nil, fmt.Errorf("redis exists user-account error: %w", err)
+		return false, fmt.Errorf("redis exists user-account error: %w", err)
 	}
 
-	exists := count > 0
-	return &exists, nil
+	return count > 0, nil
 }
 
-func (ucr *useraccountcahceRepository) GetSync(ctx context.Context, userId string, ttl time.Duration) ([]string, error) {
-	var accs []string
-	ex, err := ucr.Exists(ctx, userId)
+func (ucr *useraccountcahceRepository) GetSync(ctx context.Context, userId string, ttl time.Duration) (*repository_contract.UserAccountCache, error) {
+	exists, err := ucr.Exists(ctx, userId)
 	if err != nil {
-		return accs, err
-	}
-	if !*ex {
-		accs, err = ucr.CreateOrReplaceGet(ctx, userId, ttl)
-		return accs, nil
+		return nil, err
 	}
 
-	return accs, nil
+	if !exists {
+		return ucr.CreateOrReplaceGet(ctx, userId, ttl)
+	}
+
+	return ucr.Get(ctx, userId)
 }

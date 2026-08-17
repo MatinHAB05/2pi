@@ -6,10 +6,15 @@ import (
 )
 
 type UserAccountCacheRepository interface {
-	CreateOrReplace(ctx context.Context, userId string, ttl time.Duration) error
-	CreateOrReplaceGet(ctx context.Context, userId string, ttl time.Duration) ([]string, error)
-	Get(ctx context.Context, userId string) ([]string, error)
-	GetSync(ctx context.Context, userId string, ttl time.Duration) ([]string, error)
-	Delete(ctx context.Context, userId string) error
-	Exists(ctx context.Context, userId string) (*bool, error)
+	CreateOrReplace(ctx context.Context, userID string, ttl time.Duration) error
+	CreateOrReplaceGet(ctx context.Context, userID string, ttl time.Duration) (*UserAccountCache, error)
+	Get(ctx context.Context, userID string) (*UserAccountCache, error)
+	Delete(ctx context.Context, userID string) error
+	Exists(ctx context.Context, userID string) (bool, error)
+	GetSync(ctx context.Context, userID string, ttl time.Duration) (*UserAccountCache, error)
+}
+
+type UserAccountCache struct {
+	AccountID int64
+	AccountOwnerID   int64
 }
