@@ -8,8 +8,9 @@ import (
 	"os/signal"
 
 	"github.com/MatinHAB05/2pi/config"
-	"github.com/MatinHAB05/2pi/internal/presentation/handler"
-	"github.com/MatinHAB05/2pi/internal/presentation/router"
+	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
+	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
+	"github.com/MatinHAB05/2pi/internal/presentation/v1/router"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/MatinHAB05/2pi/pkg/tellogger"
 	"github.com/go-telegram/bot"
@@ -60,6 +61,9 @@ func main() {
 	opts := []bot.Option{
 		bot.WithDebugHandler(bot.DebugHandler(telLogger)),
 		bot.WithDefaultHandler(basicHandler.NotFound),
+		bot.WithMiddlewares(
+			bot.Middleware(middleware.Logger(appLogger)),
+			bot.Middleware(middleware.Recovery(appLogger))),
 	}
 	if config.Environment.DebugModeOptions.Flag {
 		opts = append(opts, bot.WithDebug())

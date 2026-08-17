@@ -8,14 +8,14 @@ import (
 
 type TargetAccountService interface {
 	Create(ctx context.Context, req CreateTargetAccountRequest) (*TargetAccountResponse, error)
-	GetByID(ctx context.Context, id uint) (*TargetAccountResponse, error)
+	GetByID(ctx context.Context, id int64) (*TargetAccountResponse, error)
 	GetByUsername(ctx context.Context, username string) (*TargetAccountResponse, error)
 	GetByOwnerID(ctx context.Context, ownerUserID int64, limit, offset int) ([]TargetAccountResponse, error)
 	Update(ctx context.Context, req UpdateTargetAccountRequest) (*TargetAccountResponse, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id int64) error
 	CountByOwnerID(ctx context.Context, ownerUserID int64) (int64, error)
-	DeleteByIDAndOwnerID(ctx context.Context, id uint, ownerUserID int64) error
-	GetByIDAndOwnerID(ctx context.Context, id uint, ownerUserID int64) (*TargetAccountResponse, error)
+	DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error
+	GetByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) (*TargetAccountResponse, error)
 }
 
 type CreateTargetAccountRequest struct {
@@ -24,7 +24,7 @@ type CreateTargetAccountRequest struct {
 }
 
 type UpdateTargetAccountRequest struct {
-	ID          uint   `json:"id"`
+	ID          int64  `json:"id"`
 	OwnerUserID int64  `json:"owner_user_id"`
 	Username    string `json:"username"`
 	DayDuration int
@@ -35,7 +35,7 @@ type UpdateTargetAccountRequest struct {
 }
 
 type TargetAccountResponse struct {
-	ID          uint   `json:"id"`
+	ID          int64  `json:"id"`
 	OwnerUserID int64  `json:"owner_user_id"`
 	Username    string `json:"username"`
 	DayDuration int
@@ -50,7 +50,7 @@ func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
 		return nil
 	}
 	return &TargetAccountResponse{
-		ID:          uint(ta.ID),
+		ID:          int64(ta.ID),
 		OwnerUserID: ta.OwnerUserID,
 		Username:    ta.Username,
 		DayDuration: *ta.DayDuration,

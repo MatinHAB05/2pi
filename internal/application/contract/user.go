@@ -8,23 +8,23 @@ import (
 
 type UserService interface {
 	Create(ctx context.Context, req CreateUserRequest) (*UserResponse, error)
-	GetByID(ctx context.Context, id uint) (*UserResponse, error)
-	GetWithTargetAccounts(ctx context.Context, id uint) (*UserResponse, error)
+	GetByID(ctx context.Context, id int64) (*UserResponse, error)
+	GetWithTargetAccounts(ctx context.Context, id int64) (*UserResponse, error)
 	Update(ctx context.Context, req UpdateUserRequest) (*UserResponse, error)
-	Delete(ctx context.Context, id uint) error
-	Exists(ctx context.Context, id uint) (bool, error)
+	Delete(ctx context.Context, id int64) error
+	Exists(ctx context.Context, id int64) (bool, error)
 }
 
 type CreateUserRequest struct {
-	ID uint `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type UpdateUserRequest struct {
-	ID uint `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type UserResponse struct {
-	ID             uint                    `json:"id"`
+	ID             int64                   `json:"id"`
 	TargetAccounts []TargetAccountResponse `json:"target_accounts,omitempty"`
 }
 
@@ -33,7 +33,7 @@ func ToUserResponse(u *entity.User) *UserResponse {
 		return nil
 	}
 	res := &UserResponse{
-		ID: uint(u.ID),
+		ID: int64(u.ID),
 	}
 	if len(u.TargetAccounts) > 0 {
 		res.TargetAccounts = ToTargetAccountSliceResponse(u.TargetAccounts)

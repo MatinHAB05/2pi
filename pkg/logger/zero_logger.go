@@ -62,7 +62,7 @@ func (l *zeroLogger) Init() {
 		var logger = zerolog.New(mw).
 			With().
 			Timestamp().
-			Str("AppName", "Reminder").
+			Str("AppName", "2pi").
 			Str("LoggerName", "Zero-log").
 			Logger()
 		zerolog.SetGlobalLevel(l.getLogLevel())

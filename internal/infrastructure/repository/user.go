@@ -22,7 +22,7 @@ func (r *userRepository) Create(ctx context.Context, user *entity.User) error {
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepository) GetByID(ctx context.Context, id uint) (*entity.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, id int64) (*entity.User, error) {
 	var user entity.User
 	err := r.db.WithContext(ctx).First(&user, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -31,7 +31,7 @@ func (r *userRepository) GetByID(ctx context.Context, id uint) (*entity.User, er
 	return &user, err
 }
 
-func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id uint) (*entity.User, error) {
+func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id int64) (*entity.User, error) {
 	var user entity.User
 	err := r.db.WithContext(ctx).
 		Preload("TargetAccounts").
@@ -48,7 +48,7 @@ func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
 	return r.db.WithContext(ctx).Save(user).Error
 }
 
-func (r *userRepository) Delete(ctx context.Context, id uint) error {
+func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	result := r.db.WithContext(ctx).Delete(&entity.User{}, id)
 	if result.Error != nil {
 		return result.Error
@@ -59,7 +59,7 @@ func (r *userRepository) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (r *userRepository) Exists(ctx context.Context, id uint) (bool, error) {
+func (r *userRepository) Exists(ctx context.Context, id int64) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&entity.User{}).

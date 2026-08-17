@@ -6,6 +6,7 @@ type ExtraKey string
 
 // Categories
 const (
+	Panic      Category = "Panic"
 	General    Category = "General"
 	IO         Category = "IO"
 	Internal   Category = "Internal"
@@ -17,6 +18,9 @@ const (
 
 // SubCategories
 const (
+	MPanic  SubCategory = "Recovery-Middleware"
+	LoggerM SubCategory = "Logger-Middleware"
+
 	// General
 	Startup SubCategory = "Startup"
 

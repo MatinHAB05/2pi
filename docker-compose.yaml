@@ -3,7 +3,7 @@ version: "3.8"
 services:
   db:
     image: postgres:${POSTGRES_VERSION:-15}-alpine
-    container_name: ${POSTGRES_CONTAINER:-reminder_postgres_db}
+    container_name: ${POSTGRES_CONTAINER:-2pi_postgres_db}
     restart: always
     environment:
       POSTGRES_USER: ${PDB_USER}
@@ -25,7 +25,7 @@ services:
 
   redis:
     image: redis:${REDIS_VERSION:-7}-alpine
-    container_name: ${REDIS_CONTAINER:-reminder_redis_db}
+    container_name: ${REDIS_CONTAINER:-2pi_redis_db}
     restart: always
     command: redis-server --requirepass ${RDB_PASSWORD}
     ports:
@@ -44,7 +44,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:${PGADMIN_VERSION:-latest}
-    container_name: ${PGADMIN_CONTAINER:-reminder_pgadmin}
+    container_name: ${PGADMIN_CONTAINER:-2pi_pgadmin}
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}

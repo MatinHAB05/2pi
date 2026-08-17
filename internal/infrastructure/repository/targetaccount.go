@@ -22,7 +22,7 @@ func (r *targetAccountRepository) Create(ctx context.Context, target *entity.Tar
 	return r.db.WithContext(ctx).Create(target).Error
 }
 
-func (r *targetAccountRepository) GetByID(ctx context.Context, id uint) (*entity.TargetAccount, error) {
+func (r *targetAccountRepository) GetByID(ctx context.Context, id int64) (*entity.TargetAccount, error) {
 	var target entity.TargetAccount
 	err := r.db.WithContext(ctx).First(&target, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -55,7 +55,7 @@ func (r *targetAccountRepository) GetByOwnerID(ctx context.Context, ownerUserID 
 	return targets, err
 }
 
-func (r *targetAccountRepository) GetByIDAndOwnerID(ctx context.Context, id uint, ownerUserID int64) (*entity.TargetAccount, error) {
+func (r *targetAccountRepository) GetByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) (*entity.TargetAccount, error) {
 	var target entity.TargetAccount
 	err := r.db.WithContext(ctx).
 		Where("id = ? AND owner_user_id = ?", id, ownerUserID).
@@ -72,7 +72,7 @@ func (r *targetAccountRepository) Update(ctx context.Context, target *entity.Tar
 	return r.db.WithContext(ctx).Save(target).Error
 }
 
-func (r *targetAccountRepository) Delete(ctx context.Context, id uint) error {
+func (r *targetAccountRepository) Delete(ctx context.Context, id int64) error {
 	result := r.db.WithContext(ctx).Delete(&entity.TargetAccount{}, id)
 	if result.Error != nil {
 		return result.Error
@@ -83,7 +83,7 @@ func (r *targetAccountRepository) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (r *targetAccountRepository) DeleteByIDAndOwnerID(ctx context.Context, id uint, ownerUserID int64) error {
+func (r *targetAccountRepository) DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error {
 	result := r.db.WithContext(ctx).
 		Where("id = ? AND owner_user_id = ?", id, ownerUserID).
 		Delete(&entity.TargetAccount{})

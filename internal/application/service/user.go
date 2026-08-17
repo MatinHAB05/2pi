@@ -40,7 +40,7 @@ func (s *userService) Create(ctx context.Context, req service_contract.CreateUse
 	return service_contract.ToUserResponse(user), nil
 }
 
-func (s *userService) GetByID(ctx context.Context, id uint) (*service_contract.UserResponse, error) {
+func (s *userService) GetByID(ctx context.Context, id int64) (*service_contract.UserResponse, error) {
 	u, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.UserService, "failed to get user by id", map[logger.ExtraKey]interface{}{
@@ -53,7 +53,7 @@ func (s *userService) GetByID(ctx context.Context, id uint) (*service_contract.U
 	return service_contract.ToUserResponse(u), nil
 }
 
-func (s *userService) GetWithTargetAccounts(ctx context.Context, id uint) (*service_contract.UserResponse, error) {
+func (s *userService) GetWithTargetAccounts(ctx context.Context, id int64) (*service_contract.UserResponse, error) {
 	u, err := s.repo.GetWithTargetAccounts(ctx, id)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.UserService, "failed to get user with target accounts", map[logger.ExtraKey]interface{}{
@@ -88,7 +88,7 @@ func (s *userService) Update(ctx context.Context, req service_contract.UpdateUse
 	return service_contract.ToUserResponse(user), nil
 }
 
-func (s *userService) Delete(ctx context.Context, id uint) error {
+func (s *userService) Delete(ctx context.Context, id int64) error {
 	if err := s.repo.Delete(ctx, id); err != nil {
 		s.logger.Error(logger.Service, logger.UserService, "failed to delete user", map[logger.ExtraKey]interface{}{
 			logger.UserID:       id,
@@ -103,7 +103,7 @@ func (s *userService) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (s *userService) Exists(ctx context.Context, id uint) (bool, error) {
+func (s *userService) Exists(ctx context.Context, id int64) (bool, error) {
 	exists, err := s.repo.Exists(ctx, id)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.UserService, "failed to check user existence", map[logger.ExtraKey]interface{}{
