@@ -12,6 +12,7 @@ const (
 	Postgres   Category = "Postgres"
 	Redis      Category = "Redis"
 	Validation Category = "Validation"
+	Service    Category = "Service"
 )
 
 // SubCategories
@@ -19,25 +20,23 @@ const (
 	// General
 	Startup SubCategory = "Startup"
 
-// Postgres
-
-// Internal
-
-// Validation
-
-// IO
-
-// Redis
-
+	// Service
+	UserService          SubCategory = "UserService"
+	TargetAccountService SubCategory = "TargetAccountService"
+	RBACService          SubCategory = "RBACService"
 )
 
 // Extra Keys
 const (
-	// System & Metadata
-
-	// Request & Response
-
-	// User & Business Context
+	// Business Context
+	UserID          ExtraKey = "UserID"
+	TargetAccountID ExtraKey = "TargetAccountID"
+	OwnerID         ExtraKey = "OwnerID"
+	Role            ExtraKey = "Role"
+	Action          ExtraKey = "Action"
+	Username        ExtraKey = "Username"
+	Limit           ExtraKey = "Limit"
+	Offset          ExtraKey = "Offset"
 
 	// Error Details
 	ErrorMessage ExtraKey = "ErrorMessage"

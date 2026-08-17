@@ -9,7 +9,7 @@ type TargetAccount struct {
 	Period      *int
 	UserLang    Lang `gorm:"type:lang;not null;default:'fa'"`
 	Description *string
-
+	Enable      bool
 	// Relations
 	Owner User `gorm:"foreignKey:OwnerUserID;references:ID"`
 }

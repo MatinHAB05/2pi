@@ -19,6 +19,7 @@ CREATE TABLE target_accounts (
     period INTEGER,
     user_lang lang NOT NULL DEFAULT 'fa',
     description TEXT,
+    enable BOOLEAN DEFAULT false, 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE
