@@ -20,21 +20,28 @@ type AuthenticationContextToken struct {
 
 // GetTokenFromContext constructs an AuthenticationContextToken from context key-value pairs.
 func GetTokenFromContext(ctx context.Context) (*AuthenticationContextToken, error) {
-	// Extract required UserId
 	rawUserID := ctx.Value(UserIDKey)
 	if rawUserID == nil {
 		return nil, exception.ErrUserIDNotFound
 	}
 
-	userID, ok := rawUserID.(int64)
-	if !ok {
+	var userID int64
+	switch v := rawUserID.(type) {
+	case int64:
+		userID = v
+	case *int64:
+		if v == nil {
+			return nil, exception.ErrUserIDNotFound
+		}
+		userID = *v
+	case int:
+		userID = int64(v)
+	default:
 		return nil, exception.ErrInvalidUserIDType
 	}
 
 	token := &AuthenticationContextToken{
-		UserId:         userID,
-		AccountID:      nil,
-		AccountOwnerID: nil,
+		UserId: userID,
 	}
 
 	// Extract optional AccountID

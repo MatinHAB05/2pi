@@ -27,7 +27,7 @@ var (
 
 func NewRedisDatabase(redisConfig *config.Redis, redisConst *config.RedisConst) *RedisDatabase {
 	rdbOnce.Do(func() {
-		address := fmt.Sprintf("%s:%s", redisConfig.Host, redisConfig.Port)
+		address := fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port)
 		rdb := redis.NewClient(&redis.Options{
 			Addr:     address,
 			Password: redisConfig.Password,

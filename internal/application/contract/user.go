@@ -7,12 +7,12 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, req CreateUserRequest) (*UserResponse, error)
-	GetByID(ctx context.Context, id int64) (*UserResponse, error)
-	GetWithTargetAccounts(ctx context.Context, id int64) (*UserResponse, error)
-	Update(ctx context.Context, req UpdateUserRequest) (*UserResponse, error)
-	Delete(ctx context.Context, id int64) error
-	Exists(ctx context.Context, id int64) (bool, error)
+	Create(ctx context.Context, tokenContext TokenContext, req CreateUserRequest) (*UserResponse, error)
+	GetByID(ctx context.Context, tokenContext TokenContext, id int64) (*UserResponse, error)
+	GetWithTargetAccounts(ctx context.Context, tokenContext TokenContext, id int64) (*UserResponse, error)
+	Update(ctx context.Context, tokenContext TokenContext, req UpdateUserRequest) (*UserResponse, error)
+	Delete(ctx context.Context, tokenContext TokenContext, id int64) error
+	Exists(ctx context.Context, tokenContext TokenContext, id int64) (bool, error)
 }
 
 type CreateUserRequest struct {

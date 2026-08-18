@@ -5,27 +5,19 @@ import (
 	"strconv"
 	"time"
 
-	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/tokencontext"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
 
-func Authentication(userAccCache repository_contract.UserAccountCacheRepository, applogger logger.Logger) MiddlewareFunction {
+func Authentication(userAccCache service_contract.UserAccountCacheService, applogger logger.Logger) MiddlewareFunction {
 	return func(next bot.HandlerFunc) bot.HandlerFunc {
 		return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			userID := GetUserIDFromUpdate(update)
 			if userID == 0 {
 				applogger.Warn(logger.General, logger.Startup, "failed to extract user_id from update", nil)
-				return
-			}
-
-			account, err := userAccCache.GetSync(ctx, strconv.Itoa(int(userID)), time.Hour)
-			if err != nil {
-				applogger.Warn(logger.General, logger.Startup, "failed to get user-account from redis", map[logger.ExtraKey]interface{}{
-					logger.ErrorMessage: err.Error(),
-				})
 				return
 			}
 
@@ -35,12 +27,20 @@ func Authentication(userAccCache repository_contract.UserAccountCacheRepository,
 				AccountOwnerID: nil,
 			}
 
+			account, err := userAccCache.GetOrSyncUserAccount(ctx, service_contract.MapTokenContextToService(&token), strconv.Itoa(int(userID)), "NO MATTER", time.Hour)
+			if err != nil {
+				applogger.Warn(logger.General, logger.Startup, "failed to get user-account from redis", map[logger.ExtraKey]interface{}{
+					logger.ErrorMessage: err.Error(),
+				})
+				return
+			}
+
 			if account != nil {
 				token.AccountID = &account.AccountID
 				token.AccountOwnerID = &account.AccountOwnerID
 			}
 
-			tokencontext.SetTokenInContext(ctx, &token)
+			ctx = tokencontext.SetTokenInContext(ctx, &token)
 
 			next(ctx, b, update)
 		}

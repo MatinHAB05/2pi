@@ -10,7 +10,6 @@ import (
 	"github.com/MatinHAB05/2pi/config"
 	"github.com/MatinHAB05/2pi/internal/application/service"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
-	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/repository"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
@@ -72,25 +71,33 @@ func main() {
 	// })
 
 	// casbin
-	rbacEnf := rbac.NewCasbin(&config.Environment.Casbin, pgDB)
+	// rbacEnf := rbac.NewCasbin(&config.Environment.Casbin, pgDB)
 
 	// repos
 	userRepo := repository.NewUserRepository(pgDB)
-	rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
+	// rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
 	targetaccountRepo := repository.NewTargetAccountRepository(pgDB)
-	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient, userRepo)
+	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient)
 	rs := router.Repos{
 		UserAccCache: useracccahceRepo,
 	}
 
+	// seed
+	// rbacSeeder := seed.NewRBACSeeder(rbacRepo)
+	// err := rbacSeeder.SeedAdminUser(ctx, "123456", "123456")
+	// err = rbacSeeder.SeedPermissions(ctx)
+
 	// services
 	userSrv := service.NewUserService(userRepo, appLogger)
-	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
-	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
-	ss := router.Services{}
+	// rbacSrv := service.NewRBACService(rbacRepo, appLogger)
+	// targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
+	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger)
+	ss := router.Services{
+		UserAccountCache: useraccountSrv,
+	}
 
 	// register handlers
-	basicHandler := handler.NewBasicHandler(appLogger)
+	basicHandler := handler.NewBasicHandler(userSrv, appLogger)
 	hs := router.Handlers{
 		BasicHandler: basicHandler,
 	}
@@ -100,8 +107,8 @@ func main() {
 		bot.WithDebugHandler(bot.DebugHandler(telLogger)),
 		bot.WithDefaultHandler(basicHandler.NotFound),
 		bot.WithMiddlewares(
-			bot.Middleware(middleware.Logger(appLogger)),
-			bot.Middleware(middleware.Recovery(appLogger))),
+			bot.Middleware(middleware.Logger(appLogger))),
+		// bot.Middleware(middleware.Recovery(appLogger))),
 	}
 	if config.Environment.DebugModeOptions.Flag {
 		opts = append(opts, bot.WithDebug())

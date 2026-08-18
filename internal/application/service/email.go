@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/MatinHAB05/2pi/config"
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	mail "github.com/MatinHAB05/2pi/pkg/wneessen-go-mail"
 	"github.com/MatinHAB05/2pi/static"
-
-	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 )
 
 type emailService struct {
@@ -35,7 +34,7 @@ func NewEmailService(
 	}
 }
 
-func (s *emailService) SendEmail(ctx context.Context, req service_contract.SendEmailRequest) (*bool, error) {
+func (s *emailService) SendEmail(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.SendEmailRequest) (*bool, error) {
 	success := true
 
 	if s.debugModeConfig != nil && s.debugModeConfig.Flag {
@@ -83,7 +82,7 @@ func (s *emailService) SendEmail(ctx context.Context, req service_contract.SendE
 }
 
 // TODO
-func (s *emailService) SendWakeUpEmail(ctx context.Context, req service_contract.SendWakeUpEmailRequest) (*bool, error) {
+func (s *emailService) SendWakeUpEmail(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.SendWakeUpEmailRequest) (*bool, error) {
 	buffer, err := s.statics.ExecuteWakeUpTemplate()
 	if err != nil {
 		s.appLogger.Error(logger.Internal, logger.ExternalService, "failed to execute WakeUp HTML template", map[logger.ExtraKey]interface{}{
@@ -92,11 +91,9 @@ func (s *emailService) SendWakeUpEmail(ctx context.Context, req service_contract
 		return nil, fmt.Errorf("failed to render  WakeUp email template: %w", err)
 	}
 
-	plainTextBody := fmt.Sprintf(
-		"...",
-	)
+	plainTextBody := fmt.Sprintf("...")
 
-	success, err := s.SendEmail(ctx, service_contract.SendEmailRequest{
+	success, err := s.SendEmail(ctx, tokenContext, service_contract.SendEmailRequest{
 		To:       req.To,
 		Subject:  "",
 		HTMLBody: buffer.String(),

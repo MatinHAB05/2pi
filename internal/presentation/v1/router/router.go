@@ -1,6 +1,7 @@
 package router
 
 import (
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
@@ -13,6 +14,7 @@ type Repos struct {
 }
 
 type Services struct {
+	UserAccountCache service_contract.UserAccountCacheService
 }
 
 type Handlers struct {
@@ -20,7 +22,7 @@ type Handlers struct {
 }
 
 func NewRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repos, applogger logger.Logger) *bot.Bot {
-	authMid := middleware.Authentication(repos.UserAccCache, applogger)
+	authMid := middleware.Authentication(services.UserAccountCache, applogger)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, handlers.BasicHandler.Start, bot.Middleware(authMid))
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, handlers.BasicHandler.Help)

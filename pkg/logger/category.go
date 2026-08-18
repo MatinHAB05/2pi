@@ -9,6 +9,7 @@ const (
 	Panic      Category = "Panic"
 	General    Category = "General"
 	IO         Category = "IO"
+	Handler    Category = "Handler"
 	Internal   Category = "Internal"
 	Postgres   Category = "Postgres"
 	Redis      Category = "Redis"
@@ -21,7 +22,8 @@ const (
 	MPanic          SubCategory = "Recovery-Middleware"
 	LoggerM         SubCategory = "Logger-Middleware"
 	ExternalService SubCategory = "External"
-
+	Telegram        SubCategory = "Telegram"
+	CacheService    SubCategory = "Cache Service"
 	// General
 	Startup SubCategory = "Startup"
 

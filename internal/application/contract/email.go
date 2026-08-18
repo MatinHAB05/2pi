@@ -5,8 +5,8 @@ import (
 )
 
 type EmailService interface {
-	SendEmail(ctx context.Context, req SendEmailRequest) (*bool, error)
-	SendWakeUpEmail(ctx context.Context, req SendWakeUpEmailRequest) (*bool, error)
+	SendEmail(ctx context.Context, tokenContext TokenContext, req SendEmailRequest) (*bool, error)
+	SendWakeUpEmail(ctx context.Context, tokenContext TokenContext, req SendWakeUpEmailRequest) (*bool, error)
 }
 
 type SendEmailRequest struct {

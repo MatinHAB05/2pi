@@ -4,7 +4,7 @@ type TargetAccount struct {
 	BaseEntity
 
 	OwnerUserID int64  `gorm:"not null;index"`
-	Username    string `gorm:"size:100;not null;unique"`
+	Username    string `gorm:"size:100;not null;"`
 	DayDuration *int
 	Period      *int
 	UserLang    Lang `gorm:"type:lang;not null;default:'fa'"`

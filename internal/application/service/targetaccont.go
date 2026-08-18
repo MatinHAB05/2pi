@@ -21,7 +21,7 @@ func NewTargetAccountService(repo repository_contract.TargetAccountRepository, l
 	}
 }
 
-func (s *targetAccountService) Create(ctx context.Context, req service_contract.CreateTargetAccountRequest) (*service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) Create(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.CreateTargetAccountRequest) (*service_contract.TargetAccountResponse, error) {
 	target := &entity.TargetAccount{
 		OwnerUserID: req.OwnerUserID,
 		Username:    req.Username,
@@ -42,7 +42,7 @@ func (s *targetAccountService) Create(ctx context.Context, req service_contract.
 	return service_contract.ToTargetAccountResponse(target), nil
 }
 
-func (s *targetAccountService) GetByID(ctx context.Context, id int64) (*service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) GetByID(ctx context.Context, tokenContext service_contract.TokenContext, id int64) (*service_contract.TargetAccountResponse, error) {
 	target, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target account by id", map[logger.ExtraKey]interface{}{
@@ -55,7 +55,7 @@ func (s *targetAccountService) GetByID(ctx context.Context, id int64) (*service_
 	return service_contract.ToTargetAccountResponse(target), nil
 }
 
-func (s *targetAccountService) GetByUsername(ctx context.Context, username string) (*service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) GetByUsername(ctx context.Context, tokenContext service_contract.TokenContext, username string) (*service_contract.TargetAccountResponse, error) {
 	target, err := s.repo.GetByUsername(ctx, username)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target account by username", map[logger.ExtraKey]interface{}{
@@ -68,7 +68,7 @@ func (s *targetAccountService) GetByUsername(ctx context.Context, username strin
 	return service_contract.ToTargetAccountResponse(target), nil
 }
 
-func (s *targetAccountService) GetByOwnerID(ctx context.Context, ownerUserID int64, limit, offset int) ([]service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) GetByOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, ownerUserID int64, limit, offset int) ([]service_contract.TargetAccountResponse, error) {
 	accounts, err := s.repo.GetByOwnerID(ctx, ownerUserID, limit, offset)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target accounts by owner id", map[logger.ExtraKey]interface{}{
@@ -83,7 +83,7 @@ func (s *targetAccountService) GetByOwnerID(ctx context.Context, ownerUserID int
 	return service_contract.ToTargetAccountSliceResponse(accounts), nil
 }
 
-func (s *targetAccountService) Update(ctx context.Context, req service_contract.UpdateTargetAccountRequest) (*service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) Update(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.UpdateTargetAccountRequest) (*service_contract.TargetAccountResponse, error) {
 	target := &entity.TargetAccount{
 		BaseEntity:  entity.BaseEntity{ID: int64(req.ID)},
 		OwnerUserID: req.OwnerUserID,
@@ -110,7 +110,7 @@ func (s *targetAccountService) Update(ctx context.Context, req service_contract.
 	return service_contract.ToTargetAccountResponse(target), nil
 }
 
-func (s *targetAccountService) Delete(ctx context.Context, id int64) error {
+func (s *targetAccountService) Delete(ctx context.Context, tokenContext service_contract.TokenContext, id int64) error {
 	if err := s.repo.Delete(ctx, id); err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to delete target account", map[logger.ExtraKey]interface{}{
 			logger.TargetAccountID: id,
@@ -125,7 +125,7 @@ func (s *targetAccountService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *targetAccountService) CountByOwnerID(ctx context.Context, ownerUserID int64) (int64, error) {
+func (s *targetAccountService) CountByOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, ownerUserID int64) (int64, error) {
 	count, err := s.repo.CountByOwnerID(ctx, ownerUserID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to count target accounts by owner id", map[logger.ExtraKey]interface{}{
@@ -138,7 +138,7 @@ func (s *targetAccountService) CountByOwnerID(ctx context.Context, ownerUserID i
 	return count, nil
 }
 
-func (s *targetAccountService) DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error {
+func (s *targetAccountService) DeleteByIDAndOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, id int64, ownerUserID int64) error {
 	if err := s.repo.DeleteByIDAndOwnerID(ctx, id, ownerUserID); err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to delete target account by id and owner id", map[logger.ExtraKey]interface{}{
 			logger.TargetAccountID: id,
@@ -155,7 +155,7 @@ func (s *targetAccountService) DeleteByIDAndOwnerID(ctx context.Context, id int6
 	return nil
 }
 
-func (s *targetAccountService) GetByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) (*service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) GetByIDAndOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, id int64, ownerUserID int64) (*service_contract.TargetAccountResponse, error) {
 	target, err := s.repo.GetByIDAndOwnerID(ctx, id, ownerUserID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target account by id and owner id", map[logger.ExtraKey]interface{}{

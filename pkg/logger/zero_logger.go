@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )
@@ -44,8 +43,11 @@ func (l *zeroLogger) getLogLevel() zerolog.Level {
 
 func (l *zeroLogger) Init() {
 	once.Do(func() {
+		loc, err := time.LoadLocation("Asia/Tehran")
+		if err != nil {
+			loc = time.Local
+		}
 
-		loc, _ := time.LoadLocation("Asia/Tehran")
 		timeStamp := time.Now().In(loc).Format("2006-01-02-15-04-05")
 		fileName := fmt.Sprintf("%s%s-%s.log", l.cfg.FilePath, timeStamp, uuid.New().String())
 
@@ -61,10 +63,10 @@ func (l *zeroLogger) Init() {
 
 		var logger = zerolog.New(mw).
 			With().
-			Timestamp().
 			Str("AppName", "2pi").
 			Str("LoggerName", "Zero-log").
 			Logger()
+
 		zerolog.SetGlobalLevel(l.getLogLevel())
 		zeroSinLogger = &logger
 	})
@@ -72,9 +74,9 @@ func (l *zeroLogger) Init() {
 }
 
 func (l *zeroLogger) Debug(cat Category, sub SubCategory, msg string, extra map[ExtraKey]interface{}) {
-
 	l.logger.
 		Debug().
+		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
 		Fields(logParamsToZeroParams(extra)).
@@ -84,13 +86,14 @@ func (l *zeroLogger) Debug(cat Category, sub SubCategory, msg string, extra map[
 func (l *zeroLogger) Debugf(template string, args ...interface{}) {
 	l.logger.
 		Debug().
+		Time("time", time.Now()).
 		Msgf(template, args...)
 }
 
 func (l *zeroLogger) Info(cat Category, sub SubCategory, msg string, extra map[ExtraKey]interface{}) {
-
 	l.logger.
 		Info().
+		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
 		Fields(logParamsToZeroParams(extra)).
@@ -100,13 +103,14 @@ func (l *zeroLogger) Info(cat Category, sub SubCategory, msg string, extra map[E
 func (l *zeroLogger) Infof(template string, args ...interface{}) {
 	l.logger.
 		Info().
+		Time("time", time.Now()).
 		Msgf(template, args...)
 }
 
 func (l *zeroLogger) Warn(cat Category, sub SubCategory, msg string, extra map[ExtraKey]interface{}) {
-
 	l.logger.
 		Warn().
+		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
 		Fields(logParamsToZeroParams(extra)).
@@ -116,13 +120,14 @@ func (l *zeroLogger) Warn(cat Category, sub SubCategory, msg string, extra map[E
 func (l *zeroLogger) Warnf(template string, args ...interface{}) {
 	l.logger.
 		Warn().
+		Time("time", time.Now()).
 		Msgf(template, args...)
 }
 
 func (l *zeroLogger) Error(cat Category, sub SubCategory, msg string, extra map[ExtraKey]interface{}) {
-
 	l.logger.
 		Error().
+		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
 		Fields(logParamsToZeroParams(extra)).
@@ -132,13 +137,14 @@ func (l *zeroLogger) Error(cat Category, sub SubCategory, msg string, extra map[
 func (l *zeroLogger) Errorf(template string, args ...interface{}) {
 	l.logger.
 		Error().
+		Time("time", time.Now()).
 		Msgf(template, args...)
 }
 
 func (l *zeroLogger) Fatal(cat Category, sub SubCategory, msg string, extra map[ExtraKey]interface{}) {
-
 	l.logger.
 		Fatal().
+		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
 		Fields(logParamsToZeroParams(extra)).
@@ -148,6 +154,7 @@ func (l *zeroLogger) Fatal(cat Category, sub SubCategory, msg string, extra map[
 func (l *zeroLogger) Fatalf(template string, args ...interface{}) {
 	l.logger.
 		Fatal().
+		Time("time", time.Now()).
 		Msgf(template, args...)
 }
 

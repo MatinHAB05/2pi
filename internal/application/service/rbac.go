@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
@@ -19,7 +20,7 @@ func NewRBACService(repo repository_contract.RBACRepository, log logger.Logger) 
 	}
 }
 
-func (s *rbacService) EnforceForTargetAccount(ctx context.Context, userID string, targetAccountID string, action string) (bool, error) {
+func (s *rbacService) EnforceForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, userID string, targetAccountID string, action string) (bool, error) {
 	allowed, err := s.repo.EnforceForTargetAccount(userID, targetAccountID, action)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to enforce policy", map[logger.ExtraKey]interface{}{
@@ -33,7 +34,7 @@ func (s *rbacService) EnforceForTargetAccount(ctx context.Context, userID string
 	return allowed, nil
 }
 
-func (s *rbacService) AddUserRoleForTargetAccount(ctx context.Context, userID string, role string, targetAccountID string) (bool, error) {
+func (s *rbacService) AddUserRoleForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, userID string, role string, targetAccountID string) (bool, error) {
 	added, err := s.repo.AddUserRoleForTargetAccount(userID, role, targetAccountID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to add user role for target account", map[logger.ExtraKey]interface{}{
@@ -52,7 +53,7 @@ func (s *rbacService) AddUserRoleForTargetAccount(ctx context.Context, userID st
 	return added, nil
 }
 
-func (s *rbacService) RemoveUserRoleForTargetAccount(ctx context.Context, userID string, role string, targetAccountID string) (bool, error) {
+func (s *rbacService) RemoveUserRoleForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, userID string, role string, targetAccountID string) (bool, error) {
 	removed, err := s.repo.RemoveUserRoleForTargetAccount(userID, role, targetAccountID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to remove user role for target account", map[logger.ExtraKey]interface{}{
@@ -71,7 +72,7 @@ func (s *rbacService) RemoveUserRoleForTargetAccount(ctx context.Context, userID
 	return removed, nil
 }
 
-func (s *rbacService) GetUserRolesForTargetAccount(ctx context.Context, userID string, targetAccountID string) ([]string, error) {
+func (s *rbacService) GetUserRolesForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, userID string, targetAccountID string) ([]string, error) {
 	roles, err := s.repo.GetUserRolesForTargetAccount(userID, targetAccountID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to get user roles for target account", map[logger.ExtraKey]interface{}{
@@ -84,7 +85,7 @@ func (s *rbacService) GetUserRolesForTargetAccount(ctx context.Context, userID s
 	return roles, nil
 }
 
-func (s *rbacService) GetUsersForTargetAccount(ctx context.Context, targetAccountID string) ([][]string, error) {
+func (s *rbacService) GetUsersForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, targetAccountID string) ([][]string, error) {
 	users, err := s.repo.GetUsersForTargetAccount(targetAccountID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to get users for target account", map[logger.ExtraKey]interface{}{
@@ -96,7 +97,7 @@ func (s *rbacService) GetUsersForTargetAccount(ctx context.Context, targetAccoun
 	return users, nil
 }
 
-func (s *rbacService) RemoveAllRolesForTargetAccount(ctx context.Context, targetAccountID string) (bool, error) {
+func (s *rbacService) RemoveAllRolesForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, targetAccountID string) (bool, error) {
 	removed, err := s.repo.RemoveAllRolesForTargetAccount(targetAccountID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to remove all roles for target account", map[logger.ExtraKey]interface{}{
@@ -108,7 +109,7 @@ func (s *rbacService) RemoveAllRolesForTargetAccount(ctx context.Context, target
 	return removed, nil
 }
 
-func (s *rbacService) RemoveAllRolesForUser(ctx context.Context, userID string) (bool, error) {
+func (s *rbacService) RemoveAllRolesForUser(ctx context.Context, tokenContext service_contract.TokenContext, userID string) (bool, error) {
 	removed, err := s.repo.RemoveAllRolesForUser(userID)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to remove all roles for user", map[logger.ExtraKey]interface{}{
@@ -120,7 +121,7 @@ func (s *rbacService) RemoveAllRolesForUser(ctx context.Context, userID string) 
 	return removed, nil
 }
 
-func (s *rbacService) AddPermissionForRole(ctx context.Context, role string, action string) (bool, error) {
+func (s *rbacService) AddPermissionForRole(ctx context.Context, tokenContext service_contract.TokenContext, role string, action string) (bool, error) {
 	added, err := s.repo.AddPermissionForRole(role, action)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to add permission for role", map[logger.ExtraKey]interface{}{
@@ -137,7 +138,7 @@ func (s *rbacService) AddPermissionForRole(ctx context.Context, role string, act
 	return added, nil
 }
 
-func (s *rbacService) RemovePermissionForRole(ctx context.Context, role string, action string) (bool, error) {
+func (s *rbacService) RemovePermissionForRole(ctx context.Context, tokenContext service_contract.TokenContext, role string, action string) (bool, error) {
 	removed, err := s.repo.RemovePermissionForRole(role, action)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to remove permission for role", map[logger.ExtraKey]interface{}{
@@ -154,7 +155,7 @@ func (s *rbacService) RemovePermissionForRole(ctx context.Context, role string, 
 	return removed, nil
 }
 
-func (s *rbacService) GetPermissionsForRole(ctx context.Context, role string) ([][]string, error) {
+func (s *rbacService) GetPermissionsForRole(ctx context.Context, tokenContext service_contract.TokenContext, role string) ([][]string, error) {
 	perms, err := s.repo.GetPermissionsForRole(role)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.RBACService, "failed to get permissions for role", map[logger.ExtraKey]interface{}{

@@ -26,7 +26,7 @@ var (
 func NewPostgresDatabase(dbConfig *config.DataBase, dbConst *config.DBConst) *PostgresDatabase {
 	dbOnce.Do(func() {
 		dsn := fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=UTC",
+			"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=UTC",
 			dbConfig.Host,
 			dbConfig.User,
 			dbConfig.Password,

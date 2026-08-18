@@ -7,15 +7,15 @@ import (
 )
 
 type TargetAccountService interface {
-	Create(ctx context.Context, req CreateTargetAccountRequest) (*TargetAccountResponse, error)
-	GetByID(ctx context.Context, id int64) (*TargetAccountResponse, error)
-	GetByUsername(ctx context.Context, username string) (*TargetAccountResponse, error)
-	GetByOwnerID(ctx context.Context, ownerUserID int64, limit, offset int) ([]TargetAccountResponse, error)
-	Update(ctx context.Context, req UpdateTargetAccountRequest) (*TargetAccountResponse, error)
-	Delete(ctx context.Context, id int64) error
-	CountByOwnerID(ctx context.Context, ownerUserID int64) (int64, error)
-	DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error
-	GetByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) (*TargetAccountResponse, error)
+	Create(ctx context.Context, tokenContext TokenContext, req CreateTargetAccountRequest) (*TargetAccountResponse, error)
+	GetByID(ctx context.Context, tokenContext TokenContext, id int64) (*TargetAccountResponse, error)
+	GetByUsername(ctx context.Context, tokenContext TokenContext, username string) (*TargetAccountResponse, error)
+	GetByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64, limit, offset int) ([]TargetAccountResponse, error)
+	Update(ctx context.Context, tokenContext TokenContext, req UpdateTargetAccountRequest) (*TargetAccountResponse, error)
+	Delete(ctx context.Context, tokenContext TokenContext, id int64) error
+	CountByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64) (int64, error)
+	DeleteByIDAndOwnerID(ctx context.Context, tokenContext TokenContext, id int64, ownerUserID int64) error
+	GetByIDAndOwnerID(ctx context.Context, tokenContext TokenContext, id int64, ownerUserID int64) (*TargetAccountResponse, error)
 }
 
 type CreateTargetAccountRequest struct {

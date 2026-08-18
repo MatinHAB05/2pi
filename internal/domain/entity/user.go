@@ -8,7 +8,6 @@ const (
 )
 
 type User struct {
-	//TODO : CHECK `ID        int64 `gorm:"primaryKey;autoIncrement:false"` // Base On Telegram User ID
 	BaseEntity
 
 	// Relations
