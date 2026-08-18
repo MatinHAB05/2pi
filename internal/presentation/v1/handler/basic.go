@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/tokencontext"
@@ -13,23 +15,97 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
+var UserStates = make(map[int64]map[string]any) // userid ->  |
+
 // TODO: Review and Refactor
 type BasicHandler struct {
-	userService service_contract.UserService
-	logger      logger.Logger
+	userService    service_contract.UserService
+	accountService service_contract.TargetAccountService
+
+	logger logger.Logger
 }
 
 func NewBasicHandler(
 	userService service_contract.UserService,
+	accountService service_contract.TargetAccountService,
 	logger logger.Logger,
 ) BasicHandler {
 	return BasicHandler{
-		userService: userService,
-		logger:      logger,
+		userService:    userService,
+		logger:         logger,
+		accountService: accountService,
 	}
 }
 
 func (bh *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.Update) {
+	userID := helper.GetUserIDFromUpdate(update)
+	chatID := helper.GetChatID(update)
+	// messageID := helper.GetMessageID(update)
+
+	if obj, ok := UserStates[userID]; ok {
+		if strings.HasPrefix(obj["state"].(string), "acc:edit:fields:field:enter") && update.Message != nil {
+			acc_id := obj["acc_id"].(int64)
+			field := obj["field"].(string)
+			value := update.Message.Text
+
+			account := service_contract.UpdateTargetAccountRequest{ID: acc_id}
+			switch field {
+			case "day_duration":
+				dayDuration, err := strconv.Atoi(value)
+				if err != nil {
+					bh.logger.Error(logger.Handler, logger.Telegram, "", map[logger.ExtraKey]interface{}{
+						logger.ErrorMessage: err.Error(),
+					})
+					b.SendMessage(ctx, &bot.SendMessageParams{
+						ChatID: chatID,
+						Text:   "❌ Invalid day duration value. Please enter a valid number.",
+					})
+					return
+				}
+				account.DayDuration = dayDuration
+
+			case "period":
+				per, err := strconv.Atoi(value)
+				if err != nil {
+					bh.logger.Error(logger.Handler, logger.Telegram, "", map[logger.ExtraKey]interface{}{
+						logger.ErrorMessage: err.Error(),
+					})
+					b.SendMessage(ctx, &bot.SendMessageParams{
+						ChatID: chatID,
+						Text:   "❌ Invalid period value. Please enter a valid number.",
+					})
+					return
+				}
+				account.Period = per
+
+			case "description":
+				account.Description = value
+			}
+
+			acc, err := bh.accountService.Update(ctx, service_contract.MapTokenContextToService(&tokencontext.AuthenticationContextToken{}), account)
+			if err != nil {
+				bh.logger.Error(logger.Handler, logger.Telegram, "failed to update account", map[logger.ExtraKey]interface{}{
+					logger.ErrorMessage: err.Error(),
+				})
+				b.SendMessage(ctx, &bot.SendMessageParams{
+					ChatID: chatID,
+					Text:   "❌ Failed to update account settings. Please try again later.",
+				})
+				return
+			}
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: chatID,
+				Text:   "✅ Done",
+			})
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:      chatID,
+				Text:        "⚙️ Edit Account Settings \n\nSelect a parameter to update:",
+				ReplyMarkup: ui.EditAccountInlineKeyboard(acc.Enable),
+			})
+		}
+		return
+	}
+
 	bh.logger.Info(logger.Handler, logger.Telegram, "route not found", nil)
 	// bh.Help(ctx, b, update) // TODO : Message/Chat id == panic
 	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: helper.GetChatID(update), Text: "unknown : /help"})
@@ -44,41 +120,23 @@ func (bh *BasicHandler) Start(ctx context.Context, b *bot.Bot, update *models.Up
 		return
 	}
 
-	if authToken.Completed == false { // need completed
-		bh.logger.Info(logger.Handler, logger.Telegram, "registered new user via start command", map[logger.ExtraKey]interface{}{
-			logger.UserID: authToken.UserId,
-		})
-
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.Chat.ID,
-			Text:   "👋 Welcome to Period Tracker Bot!\n\nWe created your default account profile. Tracking is disabled until setup is completed.",
-			// ParseMode:   models.ParseModeMarkdown,
-			ReplyMarkup: ui.OnboardingInlineKeyboard(),
-		})
-
-		if err != nil {
-			bh.logger.Error(logger.Handler, logger.Telegram, "failed to send welcome message", map[logger.ExtraKey]interface{}{
-				logger.ErrorMessage: err.Error(),
-			})
-		}
-		return
-	}
-
-	bh.logger.Info(logger.Handler, logger.Telegram, "existing user executed start command", map[logger.ExtraKey]interface{}{
+	bh.logger.Info(logger.Handler, logger.Telegram, "registered new user via start command", map[logger.ExtraKey]interface{}{
 		logger.UserID: authToken.UserId,
 	})
 
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.Message.Chat.ID,
-		Text:        "Welcome back! Select an option from the menu below.",
-		ReplyMarkup: ui.MainMenuReplyKeyboard(),
+		ChatID: update.Message.Chat.ID,
+		Text:   "👋 Welcome to Period Tracker Bot!",
+		// ParseMode:   models.ParseModeMarkdown,
+		ReplyMarkup: ui.OnboardingInlineKeyboard(),
 	})
 
 	if err != nil {
-		bh.logger.Error(logger.Handler, logger.Telegram, "failed to send start response message", map[logger.ExtraKey]interface{}{
+		bh.logger.Error(logger.Handler, logger.Telegram, "failed to send welcome message", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
 		})
 	}
+
 }
 
 func (bh *BasicHandler) Help(ctx context.Context, b *bot.Bot, update *models.Update) {

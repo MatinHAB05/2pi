@@ -18,15 +18,20 @@ type Services struct {
 }
 
 type Handlers struct {
-	BasicHandler handler.BasicHandler
+	Basic   handler.BasicHandler
+	Account handler.AccountHandler
 }
 
 func NewRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repos, applogger logger.Logger) *bot.Bot {
 	authMid := middleware.Authentication(services.UserAccountCache, applogger)
+	clear := middleware.ClearUserState(applogger)
 
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, handlers.BasicHandler.Start, bot.Middleware(authMid))
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, handlers.BasicHandler.Help)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/setting", bot.MatchTypeExact, handlers.BasicHandler.Setting, bot.Middleware(authMid))
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, handlers.Basic.Start, bot.Middleware(authMid), bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:edit_menu", bot.MatchTypeExact, handlers.Account.CompleteAccountSetup, bot.Middleware(authMid), bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:edit:fields:field:handler", bot.MatchTypePrefix, handlers.Account.EditAccountFields, bot.Middleware(authMid), bot.Middleware(clear))
+
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, handlers.Basic.Help, bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/setting", bot.MatchTypeExact, handlers.Basic.Setting, bot.Middleware(authMid), bot.Middleware(clear))
 
 	return b
 }

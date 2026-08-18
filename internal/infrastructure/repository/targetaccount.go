@@ -32,15 +32,6 @@ func (r *targetAccountRepository) GetByID(ctx context.Context, id int64) (*entit
 	return &target, err
 }
 
-func (r *targetAccountRepository) GetByUsername(ctx context.Context, username string) (*entity.TargetAccount, error) {
-	var target entity.TargetAccount
-	err := r.db.GetDB().WithContext(ctx).Where("username = ?", username).First(&target).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, exception.ErrTargetAccountNotFound
-	}
-	return &target, err
-}
-
 func (r *targetAccountRepository) GetByOwnerID(ctx context.Context, ownerUserID int64, limit, offset int) ([]entity.TargetAccount, error) {
 	var targets []entity.TargetAccount
 	query := r.db.GetDB().WithContext(ctx).Where("owner_user_id = ?", ownerUserID)
@@ -70,7 +61,11 @@ func (r *targetAccountRepository) GetByIDAndOwnerID(ctx context.Context, id int6
 }
 
 func (r *targetAccountRepository) Update(ctx context.Context, target *entity.TargetAccount) error {
-	return r.db.GetDB().WithContext(ctx).Save(target).Error
+	return r.db.GetDB().WithContext(ctx).Where("id = ?", target.BaseEntity.ID).Updates(target).Error
+}
+
+func (r *targetAccountRepository) UpdateEnable(ctx context.Context, id int64, enb bool) error {
+	return r.db.GetDB().WithContext(ctx).Model(&entity.TargetAccount{}).Where("id = ?", id).Update("enable", enb).Error
 }
 
 func (r *targetAccountRepository) Delete(ctx context.Context, id int64) error {

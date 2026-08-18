@@ -24,9 +24,7 @@ func NewTargetAccountService(repo repository_contract.TargetAccountRepository, l
 func (s *targetAccountService) Create(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.CreateTargetAccountRequest) (*service_contract.TargetAccountResponse, error) {
 	target := &entity.TargetAccount{
 		OwnerUserID: req.OwnerUserID,
-		Username:    req.Username,
 		Enable:      false,
-		Completed:   false,
 	}
 
 	if err := s.repo.Create(ctx, target); err != nil {
@@ -56,19 +54,6 @@ func (s *targetAccountService) GetByID(ctx context.Context, tokenContext service
 	return service_contract.ToTargetAccountResponse(target), nil
 }
 
-func (s *targetAccountService) GetByUsername(ctx context.Context, tokenContext service_contract.TokenContext, username string) (*service_contract.TargetAccountResponse, error) {
-	target, err := s.repo.GetByUsername(ctx, username)
-	if err != nil {
-		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target account by username", map[logger.ExtraKey]interface{}{
-			logger.Username:     username,
-			logger.ErrorMessage: err.Error(),
-		})
-		return nil, err
-	}
-
-	return service_contract.ToTargetAccountResponse(target), nil
-}
-
 func (s *targetAccountService) GetByOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, ownerUserID int64, limit, offset int) ([]service_contract.TargetAccountResponse, error) {
 	accounts, err := s.repo.GetByOwnerID(ctx, ownerUserID, limit, offset)
 	if err != nil {
@@ -84,17 +69,31 @@ func (s *targetAccountService) GetByOwnerID(ctx context.Context, tokenContext se
 	return service_contract.ToTargetAccountSliceResponse(accounts), nil
 }
 
+func (s *targetAccountService) UpdateStatus(ctx context.Context, tokenContext service_contract.TokenContext, id int64, status bool) error {
+	if err := s.repo.UpdateEnable(ctx, id, status); err != nil {
+		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to update target account", map[logger.ExtraKey]interface{}{
+			logger.TargetAccountID: id,
+			logger.ErrorMessage:    err.Error(),
+		})
+		return err
+	}
+
+	s.logger.Info(logger.Service, logger.TargetAccountService, "target account status updated successfully", map[logger.ExtraKey]interface{}{
+		logger.TargetAccountID: id,
+		"status":               status,
+	})
+	return nil
+}
+
 func (s *targetAccountService) Update(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.UpdateTargetAccountRequest) (*service_contract.TargetAccountResponse, error) {
 	target := &entity.TargetAccount{
 		BaseEntity:  entity.BaseEntity{ID: int64(req.ID)},
 		OwnerUserID: req.OwnerUserID,
-		Username:    req.Username,
-		DayDuration: &req.DayDuration,
-		Period:      &req.Period,
+		DayDuration: req.DayDuration,
+		Period:      req.Period,
 		UserLang:    req.UserLang,
-		Description: &req.Description,
+		Description: req.Description,
 		Enable:      req.Enable,
-		Completed:   req.Completed,
 	}
 
 	if err := s.repo.Update(ctx, target); err != nil {

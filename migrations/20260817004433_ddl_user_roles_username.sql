@@ -14,11 +14,9 @@ CREATE TABLE users (
 CREATE TABLE target_accounts (
     id BIGSERIAL PRIMARY KEY,
     owner_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    username VARCHAR(100) NOT NULL,
     day_duration INTEGER,
     period INTEGER,
     user_lang lang NOT NULL DEFAULT 'fa',
-    completed BOOLEAN DEFAULT false,
     description TEXT,
     enable BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

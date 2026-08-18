@@ -9,9 +9,9 @@ import (
 type TargetAccountRepository interface {
 	Create(ctx context.Context, target *entity.TargetAccount) error
 	GetByID(ctx context.Context, id int64) (*entity.TargetAccount, error)
-	GetByUsername(ctx context.Context, username string) (*entity.TargetAccount, error)
 	GetByOwnerID(ctx context.Context, ownerUserID int64, limit, offset int) ([]entity.TargetAccount, error)
 	Update(ctx context.Context, target *entity.TargetAccount) error
+	UpdateEnable(ctx context.Context, id int64, enb bool) error
 	Delete(ctx context.Context, id int64) error
 	CountByOwnerID(ctx context.Context, ownerUserID int64) (int64, error)
 	DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error

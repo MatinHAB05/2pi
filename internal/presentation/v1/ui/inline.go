@@ -12,7 +12,7 @@ func OnboardingInlineKeyboard() *models.InlineKeyboardMarkup {
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "🚀 Complete Account Setup", CallbackData: "acc:edit_menu"},
+				{Text: "🚀 Account Setup", CallbackData: "acc:edit_menu"},
 			},
 		},
 	}
@@ -48,6 +48,16 @@ func ActiveAccountInlineKeyboard(role string, enabled bool) *models.InlineKeyboa
 	}
 }
 
+func CancelEditInlineKeyboard() *models.InlineKeyboardMarkup {
+	return &models.InlineKeyboardMarkup{
+		InlineKeyboard: [][]models.InlineKeyboardButton{
+			{
+				{Text: "❌ Cancel", CallbackData: "edit:cancel"},
+			},
+		},
+	}
+}
+
 // SwitchAccountInlineKeyboard dynamically lists target accounts user has access to
 func SwitchAccountInlineKeyboard(accounts []AccountItem, activeID int64) *models.InlineKeyboardMarkup {
 	var rows [][]models.InlineKeyboardButton
@@ -75,29 +85,23 @@ func SwitchAccountInlineKeyboard(accounts []AccountItem, activeID int64) *models
 
 // EditAccountInlineKeyboard renders target account parameters
 func EditAccountInlineKeyboard(enabled bool) *models.InlineKeyboardMarkup {
-	statusLabel := "⚡ Status: [ Disabled 🔴 ]"
+	statusLabel := "🟢 Enabled"
 	if enabled {
-		statusLabel = "⚡ Status: [ Enabled 🟢 ]"
+		statusLabel = "🔴 Disabled"
 	}
 
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "✏️ Username", CallbackData: "edit:field:username"},
-				{Text: "⏱ Day Duration", CallbackData: "edit:field:day_duration"},
+				{Text: "⏱ Day Duration", CallbackData: "acc:edit:fields:field:handler:day_duration"},
+				{Text: "🔄 Period", CallbackData: "acc:edit:fields:field:handler:period"},
 			},
 			{
-				{Text: "🔄 Period", CallbackData: "edit:field:period"},
-				{Text: "🌐 User Language", CallbackData: "edit:field:user_lang"},
+				{Text: statusLabel, CallbackData: "acc:edit:fields:field:handler:toggle_status"},
+				{Text: "📝 Description", CallbackData: "acc:edit:fields:field:handler:description"},
 			},
 			{
-				{Text: "📝 Description", CallbackData: "edit:field:description"},
-			},
-			{
-				{Text: statusLabel, CallbackData: "acc:toggle_status"},
-			},
-			{
-				{Text: "🔙 Back to Dashboard", CallbackData: "acc:dashboard"},
+				{Text: "🔙 Back to Dashboard", CallbackData: "acc:edit:fields:field:handler:dashboard"},
 			},
 		},
 	}

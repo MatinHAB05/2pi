@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"time"
 
@@ -25,7 +24,6 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 
 			var token tokencontext.AuthenticationContextToken = tokencontext.AuthenticationContextToken{
 				UserId:         userID,
-				Completed:      false,
 				AccountID:      nil,
 				AccountOwnerID: nil,
 			}
@@ -37,14 +35,11 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 				})
 				return
 			}
-			log.Println(account.Completed)
 
 			if account != nil {
-				token.Completed = account.Completed
 				token.AccountID = &account.AccountID
 				token.AccountOwnerID = &account.AccountOwnerID
 			}
-			log.Println(account.Completed)
 
 			ctx = tokencontext.SetTokenInContext(ctx, &token)
 

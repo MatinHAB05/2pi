@@ -4,13 +4,11 @@ type TargetAccount struct {
 	BaseEntity
 
 	OwnerUserID int64  `gorm:"not null;index"`
-	Username    string `gorm:"size:100;not null;"`
-	DayDuration *int
-	Period      *int
+	DayDuration int
+	Period      int
 	UserLang    Lang `gorm:"type:lang;not null;default:'fa'"`
-	Description *string
+	Description string
 	Enable      bool
-	Completed   bool // TODO !
 	// Relations
 	Owner User `gorm:"foreignKey:OwnerUserID;references:ID"`
 }

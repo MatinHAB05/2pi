@@ -24,8 +24,8 @@ func Logger(applogger logger.Logger) MiddlewareFunction {
 				map[logger.ExtraKey]interface{}{
 					"update_id": update.ID,
 					"type":      info.Type,
-					"user_id":   info.UserID,
 					"username":  info.Username,
+					"user_id":   info.UserID,
 					"chat_id":   info.ChatID,
 					"payload":   info.Payload,
 				},

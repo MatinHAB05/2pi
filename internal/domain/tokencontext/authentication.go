@@ -8,14 +8,12 @@ import (
 
 const (
 	UserIDKey         contextKey = "user_id"
-	CompletedKey      contextKey = "completed"
 	AccountIDKey      contextKey = "account_id"
 	AccountOwnerIDKey contextKey = "account_owner_id"
 )
 
 type AuthenticationContextToken struct {
 	UserId         int64
-	Completed      bool
 	AccountID      *int64
 	AccountOwnerID *int64
 }
@@ -46,19 +44,7 @@ func GetTokenFromContext(ctx context.Context) (*AuthenticationContextToken, erro
 		UserId: userID,
 	}
 
-	rawCompleted := ctx.Value(CompletedKey)
-	if rawCompleted == nil {
-		return nil, exception.ErrCompletedNotFound
-	}
 
-	var completed bool
-	switch v := rawCompleted.(type) {
-	case bool:
-		completed = v
-	default:
-		return nil, exception.ErrInvalidCompletedType
-	}
-	token.Completed = completed
 
 	// Extract optional AccountID
 	if rawAccID := ctx.Value(AccountIDKey); rawAccID != nil {
@@ -89,7 +75,6 @@ func SetTokenInContext(ctx context.Context, token *AuthenticationContextToken) c
 	}
 
 	ctx = context.WithValue(ctx, UserIDKey, token.UserId)
-	ctx = context.WithValue(ctx, CompletedKey, token.Completed)
 
 	if token.AccountID != nil {
 		ctx = context.WithValue(ctx, AccountIDKey, token.AccountID)

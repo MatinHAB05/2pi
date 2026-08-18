@@ -91,16 +91,18 @@ func main() {
 	// services
 	userSrv := service.NewUserService(userRepo, appLogger)
 	// rbacSrv := service.NewRBACService(rbacRepo, appLogger)
-	// targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
+	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger)
 	ss := router.Services{
 		UserAccountCache: useraccountSrv,
 	}
 
 	// register handlers
-	basicHandler := handler.NewBasicHandler(userSrv, appLogger)
+	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, appLogger)
+	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, appLogger)
 	hs := router.Handlers{
-		BasicHandler: basicHandler,
+		Basic:   basicHandler,
+		Account: accountHandler,
 	}
 
 	// bot

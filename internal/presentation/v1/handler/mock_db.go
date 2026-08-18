@@ -182,7 +182,7 @@ func getChatID(u *models.Update) int64 {
 func sanitizeMarkdownText(acc ui.AccountItem) (string, string, string, string) {
 	username := acc.Username
 	if username == "" {
-		username = "unnamed"
+		username = "<unnamed>"
 	}
 	role := acc.Role
 	if role == "" {

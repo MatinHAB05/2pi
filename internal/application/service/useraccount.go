@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -93,7 +94,6 @@ func (s *userAccountCacheService) SyncUserAccount(
 		newAcc := &entity.TargetAccount{
 			OwnerUserID: intUserID,
 			Enable:      false,
-			Completed:   false,
 		}
 		if err := s.accountRepo.Create(ctx, newAcc); err != nil {
 			s.logger.Error(logger.Service, logger.CacheService, "failed to create target account for user", map[logger.ExtraKey]interface{}{
@@ -111,7 +111,12 @@ func (s *userAccountCacheService) SyncUserAccount(
 			return nil, nil
 		}
 		// log out scenario
-		reqAccountID = "1" // default user account
+		acc, err := s.accountRepo.GetByOwnerID(ctx, intUserID, 1, 0)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("******** : ", acc)
+		reqAccountID = fmt.Sprint(acc[0].ID) // default user account
 	}
 
 	accountID, err := strconv.ParseInt(reqAccountID, 10, 64)

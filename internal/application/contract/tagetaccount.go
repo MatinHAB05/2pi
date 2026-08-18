@@ -9,9 +9,9 @@ import (
 type TargetAccountService interface {
 	Create(ctx context.Context, tokenContext TokenContext, req CreateTargetAccountRequest) (*TargetAccountResponse, error)
 	GetByID(ctx context.Context, tokenContext TokenContext, id int64) (*TargetAccountResponse, error)
-	GetByUsername(ctx context.Context, tokenContext TokenContext, username string) (*TargetAccountResponse, error)
 	GetByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64, limit, offset int) ([]TargetAccountResponse, error)
 	Update(ctx context.Context, tokenContext TokenContext, req UpdateTargetAccountRequest) (*TargetAccountResponse, error)
+	UpdateStatus(ctx context.Context, tokenContext TokenContext, id int64, status bool) error
 	Delete(ctx context.Context, tokenContext TokenContext, id int64) error
 	CountByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64) (int64, error)
 	DeleteByIDAndOwnerID(ctx context.Context, tokenContext TokenContext, id int64, ownerUserID int64) error
@@ -19,32 +19,27 @@ type TargetAccountService interface {
 }
 
 type CreateTargetAccountRequest struct {
-	OwnerUserID int64  `json:"owner_user_id"`
-	Username    string `json:"username"`
+	OwnerUserID int64 `json:"owner_user_id"`
 }
 
 type UpdateTargetAccountRequest struct {
-	ID          int64  `json:"id"`
-	OwnerUserID int64  `json:"owner_user_id"`
-	Username    string `json:"username"`
+	ID          int64 `json:"id"`
+	OwnerUserID int64 `json:"owner_user_id"`
 	DayDuration int
 	Period      int
 	UserLang    entity.Lang
 	Description string
 	Enable      bool
-	Completed   bool
 }
 
 type TargetAccountResponse struct {
-	ID          int64  `json:"id"`
-	OwnerUserID int64  `json:"owner_user_id"`
-	Username    string `json:"username"`
+	ID          int64 `json:"id"`
+	OwnerUserID int64 `json:"owner_user_id"`
 	DayDuration int
 	Period      int
 	UserLang    entity.Lang
 	Description string
 	Enable      bool
-	Completed   bool
 }
 
 func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
@@ -54,13 +49,11 @@ func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
 	return &TargetAccountResponse{
 		ID:          int64(ta.ID),
 		OwnerUserID: ta.OwnerUserID,
-		Username:    ta.Username,
-		DayDuration: *ta.DayDuration,
-		Period:      *ta.DayDuration,
+		DayDuration: ta.DayDuration,
+		Period:      ta.DayDuration,
 		UserLang:    entity.LangEng,
-		Description: *ta.Description,
+		Description: ta.Description,
 		Enable:      ta.Enable,
-		Completed:   ta.Completed,
 	}
 }
 

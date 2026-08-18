@@ -46,7 +46,7 @@ func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id int64) (*
 }
 
 func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
-	return r.db.GetDB().WithContext(ctx).Save(user).Error
+	return r.db.GetDB().WithContext(ctx).Where("id = ?", user.BaseEntity.ID).Updates(user).Error
 }
 
 func (r *userRepository) Delete(ctx context.Context, id int64) error {
