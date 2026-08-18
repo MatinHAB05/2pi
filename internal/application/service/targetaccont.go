@@ -26,6 +26,7 @@ func (s *targetAccountService) Create(ctx context.Context, tokenContext service_
 		OwnerUserID: req.OwnerUserID,
 		Username:    req.Username,
 		Enable:      false,
+		Completed:   false,
 	}
 
 	if err := s.repo.Create(ctx, target); err != nil {
@@ -93,6 +94,7 @@ func (s *targetAccountService) Update(ctx context.Context, tokenContext service_
 		UserLang:    req.UserLang,
 		Description: &req.Description,
 		Enable:      req.Enable,
+		Completed:   req.Completed,
 	}
 
 	if err := s.repo.Update(ctx, target); err != nil {

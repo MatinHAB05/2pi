@@ -13,7 +13,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - cinema_network
+      - twopi_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PDB_USER} -d ${PDB_DB_NAME}"]
       interval: 5s
@@ -32,7 +32,7 @@ services:
     volumes:
       - redisdata:/data
     networks:
-      - cinema_network
+      - twopi_network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${RDB_PASSWORD}", "ping"]
       interval: 5s
@@ -41,29 +41,29 @@ services:
     env_file:
       - .env
 
-  pgadmin:
-    image: dpage/pgadmin4:${PGADMIN_VERSION:-latest}
-    container_name: ${PGADMIN_CONTAINER:-2pi_pgadmin}
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-    ports:
-      - "${PGADMIN_PORT:-15017}:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - db
-    networks:
-      - cinema_network
-    env_file:
-      - .env
+  # pgadmin:
+  #   image: dpage/pgadmin4:${PGADMIN_VERSION:-latest}
+  #   container_name: ${PGADMIN_CONTAINER:-2pi_pgadmin}
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+  #   ports:
+  #     - "${PGADMIN_PORT:-15017}:80"
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - twopi_network
+  #   env_file:
+  #     - .env
 
 volumes:
   pgdata:
   redisdata:
-  pgadmin_data:
+  # pgadmin_data:
 
 networks:
-  cinema_network:
+  twopi_network:
     driver: bridge

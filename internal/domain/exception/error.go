@@ -11,5 +11,7 @@ var (
 	ErrEmptyRole             = errors.New("role cannot be empty")
 	ErrEmptyAction           = errors.New("action cannot be empty")
 	ErrUserIDNotFound        = errors.New("user_id missing from context")
+	ErrCompletedNotFound     = errors.New("completed missing from context")
 	ErrInvalidUserIDType     = errors.New("user_id in context has invalid type")
+	ErrInvalidCompletedType  = errors.New("completed in context has invalid type")
 )

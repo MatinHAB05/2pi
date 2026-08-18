@@ -32,6 +32,7 @@ type UpdateTargetAccountRequest struct {
 	UserLang    entity.Lang
 	Description string
 	Enable      bool
+	Completed   bool
 }
 
 type TargetAccountResponse struct {
@@ -43,6 +44,7 @@ type TargetAccountResponse struct {
 	UserLang    entity.Lang
 	Description string
 	Enable      bool
+	Completed   bool
 }
 
 func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
@@ -58,6 +60,7 @@ func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
 		UserLang:    entity.LangEng,
 		Description: *ta.Description,
 		Enable:      ta.Enable,
+		Completed:   ta.Completed,
 	}
 }
 

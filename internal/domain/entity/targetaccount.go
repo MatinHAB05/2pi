@@ -10,6 +10,7 @@ type TargetAccount struct {
 	UserLang    Lang `gorm:"type:lang;not null;default:'fa'"`
 	Description *string
 	Enable      bool
+	Completed   bool // TODO !
 	// Relations
 	Owner User `gorm:"foreignKey:OwnerUserID;references:ID"`
 }

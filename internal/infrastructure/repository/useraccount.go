@@ -30,6 +30,7 @@ func (ucr *userAccountCacheRepository) Set(ctx context.Context, userID string, c
 	key := ucr.buildUserAccountCacheKey(userID)
 
 	fields := map[string]interface{}{
+		"completed":        cache.Completed,
 		"account_id":       cache.AccountID,
 		"account_owner_id": cache.AccountOwnerID,
 	}
@@ -72,7 +73,13 @@ func (ucr *userAccountCacheRepository) Get(ctx context.Context, userID string) (
 		return nil, fmt.Errorf("invalid account_owner_id in redis: %w", err)
 	}
 
+	completed, err := strconv.ParseBool(res["completed"])
+	if err != nil {
+		return nil, fmt.Errorf("invalid complete in redis: %w", err)
+	}
+
 	return &repository_contract.UserAccountCache{
+		Completed:      completed,
 		AccountID:      accountID,
 		AccountOwnerID: accountOwnerID,
 	}, nil

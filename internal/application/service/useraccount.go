@@ -93,6 +93,7 @@ func (s *userAccountCacheService) SyncUserAccount(
 		newAcc := &entity.TargetAccount{
 			OwnerUserID: intUserID,
 			Enable:      false,
+			Completed:   false,
 		}
 		if err := s.accountRepo.Create(ctx, newAcc); err != nil {
 			s.logger.Error(logger.Service, logger.CacheService, "failed to create target account for user", map[logger.ExtraKey]interface{}{
@@ -105,9 +106,12 @@ func (s *userAccountCacheService) SyncUserAccount(
 		reqAccountID = strconv.FormatInt(newAcc.ID, 10)
 		user.TargetAccounts = []entity.TargetAccount{*newAcc}
 	}
-
-	if len(user.TargetAccounts) == 0 {
-		return nil, nil
+	if user != nil {
+		if len(user.TargetAccounts) == 0 {
+			return nil, nil
+		}
+		// log out scenario
+		reqAccountID = "1" // default user account
 	}
 
 	accountID, err := strconv.ParseInt(reqAccountID, 10, 64)
