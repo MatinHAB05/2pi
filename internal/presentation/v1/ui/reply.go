@@ -19,5 +19,6 @@ func MainMenuReplyKeyboard() *models.ReplyKeyboardMarkup {
 			},
 		},
 		ResizeKeyboard: true,
+		IsPersistent:   false,
 	}
 }

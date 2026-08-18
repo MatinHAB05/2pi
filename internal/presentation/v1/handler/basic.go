@@ -128,7 +128,7 @@ func (bh *BasicHandler) Start(ctx context.Context, b *bot.Bot, update *models.Up
 		ChatID: update.Message.Chat.ID,
 		Text:   "👋 Welcome to Period Tracker Bot!",
 		// ParseMode:   models.ParseModeMarkdown,
-		ReplyMarkup: ui.OnboardingInlineKeyboard(),
+		ReplyMarkup: ui.MainMenuReplyKeyboard(),
 	})
 
 	if err != nil {

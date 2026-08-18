@@ -35,7 +35,7 @@ func NewAccountHandler(
 
 func (h *AccountHandler) CompleteAccountSetup(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := helper.GetChatID(update)
-	messageID := helper.GetMessageID(update)
+	// messageID := helper.GetMessageID(update)
 
 	authToken, err := tokencontext.GetTokenFromContext(ctx)
 	if err != nil {
@@ -57,10 +57,9 @@ func (h *AccountHandler) CompleteAccountSetup(ctx context.Context, b *bot.Bot, u
 		return
 	}
 
-	b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    chatID,
-		MessageID: messageID,
-		Text:      "⚙️ Edit Account Settings \n\nSelect a parameter to update:",
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   "⚙️ Edit Account Settings \n\nSelect a parameter to update:",
 		// ParseMode:   models.ParseModeMarkdown,
 		ReplyMarkup: ui.EditAccountInlineKeyboard(acc.Enable),
 	})
@@ -113,12 +112,11 @@ func (h *AccountHandler) EditAccountFields(ctx context.Context, b *bot.Bot, upda
 		})
 
 	case "dashboard":
-		_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
 			Text:   "👋 Welcome to Period Tracker Bot!\n\nWe created your default account profile. Tracking is disabled until setup is completed.",
 			// ParseMode:   models.ParseModeMarkdown,
-			MessageID:   messageID,
-			ReplyMarkup: ui.OnboardingInlineKeyboard(),
+			ReplyMarkup: ui.MainMenuReplyKeyboard(),
 		})
 
 		if err != nil {

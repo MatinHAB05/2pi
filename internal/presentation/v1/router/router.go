@@ -27,7 +27,7 @@ func NewRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repos,
 	clear := middleware.ClearUserState(applogger)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, handlers.Basic.Start, bot.Middleware(authMid), bot.Middleware(clear))
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:edit_menu", bot.MatchTypeExact, handlers.Account.CompleteAccountSetup, bot.Middleware(authMid), bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeMessageText, "⚙️ Edit Account", bot.MatchTypeExact, handlers.Account.CompleteAccountSetup, bot.Middleware(authMid), bot.Middleware(clear))
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:edit:fields:field:handler", bot.MatchTypePrefix, handlers.Account.EditAccountFields, bot.Middleware(authMid), bot.Middleware(clear))
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, handlers.Basic.Help, bot.Middleware(clear))
