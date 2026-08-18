@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
@@ -17,6 +19,7 @@ import (
 type AccountHandler struct {
 	userService    service_contract.UserService
 	accountService service_contract.TargetAccountService
+	commonHandler  *CommonHandler
 
 	logger logger.Logger
 }
@@ -25,30 +28,24 @@ func NewAccountHandler(
 	userService service_contract.UserService,
 	accountService service_contract.TargetAccountService,
 	logger logger.Logger,
+	commonHandler *CommonHandler,
+
 ) AccountHandler {
 	return AccountHandler{
 		userService:    userService,
 		accountService: accountService,
 		logger:         logger,
+		commonHandler:  commonHandler,
 	}
 }
 
 func (h *AccountHandler) CompleteAccountSetup(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := helper.GetChatID(update)
-	// messageID := helper.GetMessageID(update)
 
-	authToken, err := tokencontext.GetTokenFromContext(ctx)
-	if err != nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to get token from context", map[logger.ExtraKey]interface{}{
-			logger.ErrorMessage: err.Error(),
-		})
+	authToken, ok := h.commonHandler.getAuthTokenWithAccount(ctx)
+	if !ok {
 		return
 	}
-	if authToken.AccountID == nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account id from context - nil value", map[logger.ExtraKey]interface{}{})
-		return
-	}
-
 	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account by id", map[logger.ExtraKey]interface{}{
@@ -58,82 +55,47 @@ func (h *AccountHandler) CompleteAccountSetup(ctx context.Context, b *bot.Bot, u
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   "⚙️ Edit Account Settings \n\nSelect a parameter to update:",
-		// ParseMode:   models.ParseModeMarkdown,
+		ChatID:      chatID,
+		Text:        MsgEditAccountSettings,
 		ReplyMarkup: ui.EditAccountInlineKeyboard(acc.Enable),
 	})
-
 }
 
 func (h *AccountHandler) EditAccountFields(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := helper.GetChatID(update)
 	messageID := helper.GetMessageID(update)
 
-	authToken, err := tokencontext.GetTokenFromContext(ctx)
-	if err != nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to get token from context", map[logger.ExtraKey]interface{}{
-			logger.ErrorMessage: err.Error(),
-		})
-		return
-	}
-	if authToken.AccountID == nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account id from context - nil value", map[logger.ExtraKey]interface{}{})
+	authToken, ok := h.commonHandler.getAuthTokenWithAccount(ctx)
+	if !ok {
 		return
 	}
 
 	log.Println(update.CallbackQuery.Data)
 	text := ""
-	f := strings.TrimPrefix(update.CallbackQuery.Data, "acc:edit:fields:field:handler:")
+	f := strings.TrimPrefix(update.CallbackQuery.Data, FieldHandlerPrefix)
 	switch f {
 
-	case "day_duration":
-		text = "Enter New duration in days :"
+	case FieldDayDuration:
+		text = MsgEnterNewDayDuration
 
-	case "period":
-		text = "Enter New period in days :"
+	case FieldPeriod:
+		text = MsgEnterNewPeriod
 
-	case "description":
-		text = "Enter New Description :"
+	case FieldDescription:
+		text = MsgEnterNewDescription
 
-	case "toggle_status":
-		acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID)
-		if err != nil {
-			h.logger.Error(logger.Handler, logger.Telegram, "failed to get account", map[logger.ExtraKey]interface{}{})
-			return
-
-		}
-		log.Println(acc.Enable)
-		h.accountService.UpdateStatus(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID, !acc.Enable)
-		log.Println(!acc.Enable)
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "✅ Done", // answer replyCall
-		})
-
-	case "dashboard":
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "👋 Welcome to Period Tracker Bot!\n\nWe created your default account profile. Tracking is disabled until setup is completed.",
-			// ParseMode:   models.ParseModeMarkdown,
-			ReplyMarkup: ui.MainMenuReplyKeyboard(),
-		})
-
-		if err != nil {
-			h.logger.Error(logger.Handler, logger.Telegram, "failed to send welcome message", map[logger.ExtraKey]interface{}{
-				logger.ErrorMessage: err.Error(),
-			})
-		}
+	case FieldToggleStatus:
+		h.editFieldToggleEnableStatus(ctx, b, chatID, authToken)
 		return
-
+	case FieldDashboard:
+		h.editFieldGetBackToDashboard(ctx, b, chatID)
+		return
 	default:
 		log.Println("WTF")
 	}
-	UserStates[authToken.UserId] = map[string]any{
-		"state":  "acc:edit:fields:field:enter",
-		"acc_id": *authToken.AccountID,
-		"field":  f,
-	}
+
+	UserStates[authToken.UserId] = setEditAccountStateMap(StateEditFieldsEnter, *authToken.AccountID, f)
+
 	if text != "" {
 		b.EditMessageText(ctx, &bot.EditMessageTextParams{
 			ChatID:    chatID,
@@ -141,4 +103,140 @@ func (h *AccountHandler) EditAccountFields(ctx context.Context, b *bot.Bot, upda
 			Text:      text,
 		})
 	}
+}
+
+func setEditAccountStateMap(state string, AccountID int64, field string) map[string]any {
+	return map[string]any{
+		StateKeyStatus: state,
+		StateKeyAccID:  AccountID,
+		StateKeyField:  field,
+	}
+}
+
+func getEditAccountStateMap(keyUserID int64) (state string, accountID int64, field string, err error) {
+	if obj, ok := UserStates[keyUserID]; ok {
+		if state, ok := obj[StateKeyStatus].(string); ok && strings.HasPrefix(state, StateEditFieldsEnter) {
+			accountID = obj[StateKeyAccID].(int64)
+			field = obj[StateKeyField].(string)
+
+		}
+		err = fmt.Errorf("user is not in EditAccountState")
+		return
+	}
+	err = fmt.Errorf("not founded in user-state")
+	return
+}
+
+func (h *AccountHandler) editFieldDayDuration(value string, ctx context.Context, b *bot.Bot, chatID int64, account *service_contract.UpdateTargetAccountRequest) error {
+	dayDuration, err := strconv.Atoi(value)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   MsgErrInvalidDayDuration,
+		})
+		return err
+	}
+	account.DayDuration = dayDuration
+	return nil
+}
+
+func (h *AccountHandler) editFieldPeroid(value string, ctx context.Context, b *bot.Bot, chatID int64, account *service_contract.UpdateTargetAccountRequest) error {
+	per, err := strconv.Atoi(value)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   MsgErrInvalidPeriod,
+		})
+		return err
+	}
+	account.Period = per
+	return nil
+}
+
+func (h *AccountHandler) editFieldToggleEnableStatus(ctx context.Context, b *bot.Bot, chatID int64, authToken *tokencontext.AuthenticationContextToken) error {
+	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account", map[logger.ExtraKey]interface{}{})
+		return err
+	}
+	log.Println(acc.Enable)
+	h.accountService.UpdateStatus(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID, !acc.Enable)
+	log.Println(!acc.Enable)
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   MsgSuccessDone,
+	})
+	return nil
+}
+
+func (h *AccountHandler) editFieldGetBackToDashboard(ctx context.Context, b *bot.Bot, chatID int64) error {
+	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatID,
+		Text:        MsgDashboardWelcome,
+		ReplyMarkup: ui.MainMenuReplyKeyboard(),
+	})
+
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send welcome message", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return err
+	}
+	return nil
+}
+
+func (h *AccountHandler) IsEditAccountFieldState(obj map[string]any, update *models.Update) bool {
+	state, ok := obj[StateKeyStatus].(string)
+	return ok && strings.HasPrefix(state, StateEditFieldsEnter) && update.Message != nil
+}
+
+func (h *AccountHandler) handleEditAccountFieldState(ctx context.Context, b *bot.Bot, chatID int64, userID int64, update *models.Update) error {
+	_, accID, field, err := getEditAccountStateMap(userID)
+	value := update.Message.Text
+
+	account := service_contract.UpdateTargetAccountRequest{ID: accID}
+	switch field {
+	case FieldDayDuration:
+		err := h.editFieldDayDuration(value, ctx, b, chatID, &account)
+		if err != nil {
+			return err
+		}
+	case FieldPeriod:
+		err := h.editFieldPeroid(value, ctx, b, chatID, &account)
+		if err != nil {
+			return err
+		}
+
+	case FieldDescription:
+		account.Description = value
+	}
+
+	acc, err := h.accountService.Update(ctx, service_contract.MapTokenContextToService(&tokencontext.AuthenticationContextToken{}), account)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to update account", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   MsgErrUpdateAccountFailed,
+		})
+		return err
+	}
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   MsgSuccessDone,
+	})
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatID,
+		Text:        MsgEditAccountSettings,
+		ReplyMarkup: ui.EditAccountInlineKeyboard(acc.Enable),
+	})
+	return nil
+
 }

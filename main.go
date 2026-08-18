@@ -98,11 +98,13 @@ func main() {
 	}
 
 	// register handlers
-	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, appLogger)
-	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, appLogger)
+	commonHandler := handler.NewCommonHandler(appLogger)
+	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, appLogger, &commonHandler)
+	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &commonHandler, appLogger)
 	hs := router.Handlers{
 		Basic:   basicHandler,
 		Account: accountHandler,
+		
 	}
 
 	// bot
