@@ -17,6 +17,7 @@ import (
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/MatinHAB05/2pi/pkg/tellogger"
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 )
 
 // comment types
@@ -121,6 +122,19 @@ func main() {
 
 	// register router
 	router.NewRouter(b, &hs, &ss, &rs, appLogger)
+
+	// command list
+	// Set Bot Commands for Telegram Menu Button
+	b.SetMyCommands(ctx, &bot.SetMyCommandsParams{
+		Commands: []models.BotCommand{
+			{Command: "start", Description: "Start bot / Main menu"},
+			{Command: "help", Description: "How to use bot"},
+			{Command: "account", Description: "View current active target account"},
+			{Command: "switch", Description: "Switch active target account"},
+			{Command: "share", Description: "Manage access & permissions"},
+			{Command: "settings", Description: "Edit target account details"},
+		},
+	})
 
 	// start
 	fmt.Println("Bot is running...")
