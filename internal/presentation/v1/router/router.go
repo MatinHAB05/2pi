@@ -33,9 +33,13 @@ func NewRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repos,
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, handlers.Basic.Start, bot.Middleware(authMid), bot.Middleware(clear))
 	b.RegisterHandler(bot.HandlerTypeMessageText, "⚙️ Edit Account", bot.MatchTypeExact, handlers.Account.CompleteAccountSetup, bot.Middleware(authMid), bot.Middleware(clear))
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:edit:fields:field:handler", bot.MatchTypePrefix, handlers.Account.EditAccountFields, bot.Middleware(authMid), bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:edit:fields:field:handler:", bot.MatchTypePrefix, handlers.Account.EditAccountFields, bot.Middleware(authMid), bot.Middleware(clear))
+
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "👥 Share & Access", bot.MatchTypeExact, handlers.RBAC.ShareAccountAccess, bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:share:handler:", bot.MatchTypePrefix, handlers.RBAC.ShareAccountAccessHandler, bot.Middleware(authMid), bot.Middleware(clear))
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "acc:share:invite:handler:role:", bot.MatchTypePrefix, handlers.RBAC.InviteAccountAccessHandler, bot.Middleware(authMid), bot.Middleware(clear))
+	
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/share", bot.MatchTypeExact, handlers.RBAC.ShareAccountAccess, bot.Middleware(clear))
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "📊 Active Account", bot.MatchTypeExact, handlers.Account.ShowActiveAccount, bot.Middleware(clear))

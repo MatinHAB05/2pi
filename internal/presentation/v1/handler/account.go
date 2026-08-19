@@ -76,22 +76,22 @@ func (h *AccountHandler) EditAccountFields(ctx context.Context, b *bot.Bot, upda
 
 	log.Println(update.CallbackQuery.Data)
 	text := ""
-	f := strings.TrimPrefix(update.CallbackQuery.Data, FieldHandlerPrefix)
+	f := strings.TrimPrefix(update.CallbackQuery.Data, AccountFieldHandlerPrefix)
 	switch f {
 
-	case FieldDayDuration:
+	case AccountFieldDayDuration:
 		text = MsgEnterNewDayDuration
 
-	case FieldPeriod:
+	case AccountFieldPeriod:
 		text = MsgEnterNewPeriod
 
-	case FieldDescription:
+	case AccountFieldDescription:
 		text = MsgEnterNewDescription
 
-	case FieldToggleStatus:
+	case AccountFieldToggleStatus:
 		h.editFieldToggleEnableStatus(ctx, b, chatID, authToken)
 		return
-	case FieldDashboard:
+	case AccountFieldDashboard:
 		h.editFieldGetBackToDashboard(ctx, b, chatID)
 		return
 	default:
@@ -131,7 +131,7 @@ func getEditAccountStateMap(keyUserID int64) (state string, accountID int64, fie
 	return
 }
 
-func (h *AccountHandler) editFieldDayDuration(value string, ctx context.Context, b *bot.Bot, chatID int64, account *service_contract.UpdateTargetAccountRequest) error {
+func (h *AccountHandler) editAccountFieldDayDuration(value string, ctx context.Context, b *bot.Bot, chatID int64, account *service_contract.UpdateTargetAccountRequest) error {
 	dayDuration, err := strconv.Atoi(value)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "", map[logger.ExtraKey]interface{}{
@@ -206,18 +206,18 @@ func (h *AccountHandler) handleEditAccountFieldState(ctx context.Context, b *bot
 
 	account := service_contract.UpdateTargetAccountRequest{ID: accID}
 	switch field {
-	case FieldDayDuration:
-		err := h.editFieldDayDuration(value, ctx, b, chatID, &account)
+	case AccountFieldDayDuration:
+		err := h.editAccountFieldDayDuration(value, ctx, b, chatID, &account)
 		if err != nil {
 			return err
 		}
-	case FieldPeriod:
+	case AccountFieldPeriod:
 		err := h.editFieldPeroid(value, ctx, b, chatID, &account)
 		if err != nil {
 			return err
 		}
 
-	case FieldDescription:
+	case AccountFieldDescription:
 		account.Description = value
 	}
 

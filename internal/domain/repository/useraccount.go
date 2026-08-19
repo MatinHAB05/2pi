@@ -13,6 +13,6 @@ type UserAccountCacheRepository interface {
 }
 
 type UserAccountCache struct {
-	AccountID      int64
-	AccountOwnerID int64
+	AccountID      string
+	AccountOwnerID string
 }

@@ -69,7 +69,7 @@ func SwitchAccountInlineKeyboard(accounts []AccountItem, activeID int64) *models
 			prefix = "🟢"
 			suffix = " [ACTIVE]"
 		}
-		label := fmt.Sprintf("%s @%s (%s)%s", prefix, acc.Role, suffix)
+		label := fmt.Sprintf("%s (%s)%s", prefix, acc.Role, suffix)
 		rows = append(rows, []models.InlineKeyboardButton{
 			{Text: label, CallbackData: "switch:select:" + strconv.FormatInt(acc.ID, 10)},
 		})
@@ -107,13 +107,13 @@ func ShareAccessInlineKeyboard() *models.InlineKeyboardMarkup {
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "➕ Invite New User", CallbackData: "share:invite"},
+				{Text: "➕ Invite New User", CallbackData: "acc:share:handler:invite"},
 			},
 			{
-				{Text: "📋 List Active Collaborators", CallbackData: "share:list"},
+				{Text: "📋 List Active Collaborators", CallbackData: "acc:share:handler:list"},
 			},
 			{
-				{Text: "🔙 Back to Dashboard", CallbackData: "acc:dashboard"},
+				{Text: "🔙 Back to Dashboard", CallbackData: "acc:share:handler:dashboard"},
 			},
 		},
 	}
@@ -124,14 +124,15 @@ func SelectRoleInlineKeyboard() *models.InlineKeyboardMarkup {
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "🛠 Admin", CallbackData: "invite:role:admin"},
-				{Text: "✏️ Editor", CallbackData: "invite:role:editor"},
+				{Text: "🛠 Admin", CallbackData: "acc:share:invite:handler:role:admin"},
+				{Text: "🦉 Owner", CallbackData: "acc:share:invite:handler:role:owner"},
 			},
 			{
-				{Text: "👁 Viewer", CallbackData: "invite:role:viewer"},
+				{Text: "✏️ Editor", CallbackData: "acc:share:invite:handler:role:editor"},
+				{Text: "👁 Viewer", CallbackData: "acc:share:invite:handler:role:viewer"},
 			},
 			{
-				{Text: "❌ Cancel", CallbackData: "share:menu"},
+				{Text: "❌ Cancel", CallbackData: "acc:share:invite:handler:role:cancel"},
 			},
 		},
 	}

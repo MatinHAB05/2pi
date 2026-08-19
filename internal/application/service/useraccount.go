@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -52,9 +52,27 @@ func (s *userAccountCacheService) GetOrSyncUserAccount(
 			logger.ErrorMessage: err.Error(),
 		})
 	} else if cached != nil {
+		accountID, err := strconv.ParseInt(cached.AccountID, 10, 64)
+		if err != nil {
+			s.logger.Error(logger.Service, logger.CacheService, "failed to parse account_id from cache", map[logger.ExtraKey]interface{}{
+				logger.UserID:       userID,
+				logger.ErrorMessage: err.Error(),
+			})
+			return nil, fmt.Errorf("invalid account_id in cache: %w", err)
+		}
+
+		accountOwnerID, err := strconv.ParseInt(cached.AccountOwnerID, 10, 64)
+		if err != nil {
+			s.logger.Error(logger.Service, logger.CacheService, "failed to parse account_owner_id from cache", map[logger.ExtraKey]interface{}{
+				logger.UserID:       userID,
+				logger.ErrorMessage: err.Error(),
+			})
+			return nil, fmt.Errorf("invalid account_owner_id in cache: %w", err)
+		}
+
 		return &service_contract.UserAccountCache{
-			AccountID:      cached.AccountID,
-			AccountOwnerID: cached.AccountOwnerID,
+			AccountID:      accountID,
+			AccountOwnerID: accountOwnerID,
 		}, nil
 	}
 
@@ -112,6 +130,7 @@ func (s *userAccountCacheService) SyncUserAccount(
 		if len(user.TargetAccounts) == 0 {
 			return nil, nil
 		}
+
 		// log out scenario
 
 		// ? FOR NOW :
@@ -121,9 +140,8 @@ func (s *userAccountCacheService) SyncUserAccount(
 		if err != nil {
 			return nil, err
 		}
-		log.Println("******** : ", acc)
 		if len(acc) > 0 {
-			reqAccountID = strconv.FormatInt(acc[0].ID, 10) // default user account // base on last comment!
+			reqAccountID = strconv.FormatInt(acc[0].ID, 10) // default user account  // base on last comment!
 		}
 	}
 
@@ -133,8 +151,8 @@ func (s *userAccountCacheService) SyncUserAccount(
 	}
 
 	repoCacheData := &repository_contract.UserAccountCache{
-		AccountID:      accountID,
-		AccountOwnerID: userID,
+		AccountID:      strconv.FormatInt(accountID, 10),
+		AccountOwnerID: strconv.FormatInt(userID, 10),
 	}
 
 	// Invalidate & Set

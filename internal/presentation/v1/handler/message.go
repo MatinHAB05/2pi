@@ -2,8 +2,10 @@ package handler
 
 const (
 	// Callback Prefixes & States
-	FieldHandlerPrefix   = "acc:edit:fields:field:handler:"
-	StateEditFieldsEnter = "acc:edit:fields:field:enter"
+	AccountFieldHandlerPrefix  = "acc:edit:fields:field:handler:"
+	StateEditFieldsEnter       = "acc:edit:fields:field:enter"
+	ShareAccountHandlerPrefix  = "acc:share:handler:"
+	InviteAccountHandlerPrefix = "acc:share:invite:handler:role:"
 
 	// State Keys
 	StateKeyStatus = "state"
@@ -11,11 +13,21 @@ const (
 	StateKeyField  = "field"
 
 	// Field Identifiers
-	FieldDayDuration  = "day_duration"
-	FieldPeriod       = "period"
-	FieldDescription  = "description"
-	FieldToggleStatus = "toggle_status"
-	FieldDashboard    = "dashboard"
+	AccountFieldDayDuration  = "day_duration"
+	AccountFieldPeriod       = "period"
+	AccountFieldDescription  = "description"
+	AccountFieldToggleStatus = "toggle_status"
+	AccountFieldDashboard    = "dashboard"
+
+	ShareAccountAccessInvite    = "invite"
+	ShareAccountAccessList      = "list"
+	ShareAccountAccessDashboard = "dashboard"
+
+	InviteAccountAccessRoleAdmin  = "admin"
+	InviteAccountAccessRoleOwner  = "owner"
+	InviteAccountAccessRoleEditor = "editor"
+	InviteAccountAccessRoleViewer = "viewer"
+	InviteAccountAccessRoleCancel = "cancel"
 
 	// Response & Navigation Messages
 	MsgWelcome             = "👋 Welcome to Period Tracker Bot!"
@@ -25,6 +37,8 @@ const (
 	MsgUnknownCommand      = "unknown : /help"
 	MsgSuccessDone         = "✅ Done"
 	MsgSwitchAccount       = "Switch Account Message :"
+	MsgShareAccountMenu    = "Share Account Message Menu :"
+	MsgShareAccountInvite  = "Share Account Invite Message"
 
 	// Input Prompts
 	MsgEnterNewDayDuration = "Enter New duration in days :"

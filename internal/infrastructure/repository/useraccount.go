@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
@@ -62,21 +61,9 @@ func (ucr *userAccountCacheRepository) Get(ctx context.Context, userID string) (
 		return nil, nil
 	}
 
-	accountID, err := strconv.ParseInt(res["account_id"], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid account_id in redis: %w", err)
-	}
-
-	accountOwnerID, err := strconv.ParseInt(res["account_owner_id"], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid account_owner_id in redis: %w", err)
-	}
-
-
-
 	return &repository_contract.UserAccountCache{
-		AccountID:      accountID,
-		AccountOwnerID: accountOwnerID,
+		AccountID:      res["account_id"],
+		AccountOwnerID: res["account_owner_id"],
 	}, nil
 }
 
