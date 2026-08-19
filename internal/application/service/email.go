@@ -91,7 +91,7 @@ func (s *emailService) SendWakeUpEmail(ctx context.Context, tokenContext service
 		return nil, fmt.Errorf("failed to render  WakeUp email template: %w", err)
 	}
 
-	plainTextBody := fmt.Sprintf("...")
+	plainTextBody := fmt.Sprintf("...%s...", "👑MatinHAB05👑")
 
 	success, err := s.SendEmail(ctx, tokenContext, service_contract.SendEmailRequest{
 		To:       req.To,

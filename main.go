@@ -119,13 +119,28 @@ func main() {
 		RBAC:    rbacHandler,
 	}
 
+	// register middlewares
+	loggerMid := middleware.Logger(appLogger)
+	recoveryMid := middleware.Recovery(appLogger)
+	authMid := middleware.Authentication(useraccountSrv, appLogger)
+	clearstateMid := middleware.ClearUserState(&commonHandler, appLogger)
+	infoMid := middleware.Info(userinfoSrv, &commonHandler, appLogger)
+	mhs := router.Middlewares{
+		Logger:         loggerMid,
+		Recovery:       recoveryMid,
+		Authentication: authMid,
+		ClearState:     clearstateMid,
+		Info:           infoMid,
+	}
+
 	// bot
 	opts := []bot.Option{
 		bot.WithDebugHandler(bot.DebugHandler(telLogger)),
 		bot.WithDefaultHandler(basicHandler.NotFound),
 		bot.WithMiddlewares(
-			bot.Middleware(middleware.Logger(appLogger))),
-		// bot.Middleware(middleware.Recovery(appLogger))),
+			bot.Middleware(loggerMid),
+			bot.Middleware(recoveryMid),
+		),
 	}
 	if config.Environment.DebugModeOptions.Flag {
 		opts = append(opts, bot.WithDebug())
@@ -137,7 +152,7 @@ func main() {
 	}
 
 	// register router
-	router.NewRouter(b, &hs, &ss, &rs, appLogger)
+	router.SetUpRouter(b, &hs, &ss, &rs, &mhs, appLogger)
 
 	// command list
 	// Set Bot Commands for Telegram Menu Button
