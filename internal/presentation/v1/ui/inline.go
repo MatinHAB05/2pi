@@ -107,7 +107,7 @@ func ShareAccessInlineKeyboard() *models.InlineKeyboardMarkup {
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
-				{Text: "➕ Invite New User", CallbackData: "acc:share:handler:invite"},
+				{Text: "➕ Invite Access", CallbackData: "acc:share:handler:invite"},
 				{Text: "🫂 Confirm Invite", CallbackData: "acc:share:handler:confirm-invite"},
 			},
 			{

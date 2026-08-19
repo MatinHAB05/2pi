@@ -296,7 +296,7 @@ func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, up
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
 		Text:        MsgSwitchAccount,
-		ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{}, *authToken.AccountID),
+		ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{{ID: 123, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: true}, {ID: *authToken.AccountID, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: false}}, *authToken.AccountID),
 	})
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send switch active account message", map[logger.ExtraKey]interface{}{

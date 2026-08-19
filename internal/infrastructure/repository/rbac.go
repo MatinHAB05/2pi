@@ -26,18 +26,18 @@ func (r *rbacRepository) EnforceForTargetAccount(userID string, targetAccountID 
 	return ok, nil
 }
 
-// AddUserRoleForTargetAccount assigns a role to a user for a target account ('g' rule).
-func (r *rbacRepository) AddUserRoleForTargetAccount(userID string, role string, targetAccountID string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().AddGroupingPolicy(userID, role, targetAccountID)
+// AddUserRoleForTargetAccount assigns a role to a user for a target account ('g' rule: subject, resource, role).
+func (r *rbacRepository) AddUserRoleForTargetAccount(userID string, targetAccountID string, role string) (bool, error) {
+	ok, err := r.enforcer.GetEnforcer().AddGroupingPolicy(userID, targetAccountID, role)
 	if err != nil {
 		return false, fmt.Errorf("casbin add grouping policy failed: %w", err)
 	}
 	return ok, nil
 }
 
-// RemoveUserRoleForTargetAccount revokes a role from a user for a target account.
-func (r *rbacRepository) RemoveUserRoleForTargetAccount(userID string, role string, targetAccountID string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().RemoveGroupingPolicy(userID, role, targetAccountID)
+// RemoveUserRoleForTargetAccount revokes a role from a user for a target account ('g' rule: subject, resource, role).
+func (r *rbacRepository) RemoveUserRoleForTargetAccount(userID string, targetAccountID string, role string) (bool, error) {
+	ok, err := r.enforcer.GetEnforcer().RemoveGroupingPolicy(userID, targetAccountID, role)
 	if err != nil {
 		return false, fmt.Errorf("casbin remove grouping policy failed: %w", err)
 	}

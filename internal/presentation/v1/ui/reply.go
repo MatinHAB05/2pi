@@ -16,7 +16,7 @@ func MainMenuReplyKeyboard() *models.ReplyKeyboardMarkup {
 			},
 			{
 				{Text: "ℹ️ Help / Info"},
-				{Text: "⚙️ Setting"},
+				{Text: "⚙️ Settings"},
 			},
 			{
 				{Text: "🌐 Change Language"},
