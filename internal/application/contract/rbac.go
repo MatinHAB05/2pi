@@ -10,6 +10,7 @@ type RBACService interface {
 	RemoveUserRoleForTargetAccount(ctx context.Context, tokenContext TokenContext, userID string, targetAccountID string, role string) (bool, error)
 	GetUserRolesForTargetAccount(ctx context.Context, tokenContext TokenContext, userID string, targetAccountID string) ([]string, error)
 	GetUsersForTargetAccount(ctx context.Context, tokenContext TokenContext, targetAccountID string) ([][]string, error)
+	GetTargetAccountsForUser(ctx context.Context, tokenContext TokenContext, userID string) ([][]string, error)
 	RemoveAllRolesForTargetAccount(ctx context.Context, tokenContext TokenContext, targetAccountID string) (bool, error)
 	RemoveAllRolesForUser(ctx context.Context, tokenContext TokenContext, userID string) (bool, error)
 

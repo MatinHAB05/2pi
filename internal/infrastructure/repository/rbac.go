@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
@@ -103,4 +104,12 @@ func (r *rbacRepository) GetPermissionsForRole(role string) ([][]string, error) 
 		return nil, fmt.Errorf("casbin get filtered policy failed: %w", err)
 	}
 	return policies, nil
+}
+
+func (r *rbacRepository) GetTargetAccountsForUser(ctx context.Context, userID string) ([][]string, error) {
+	roles, err := r.enforcer.GetEnforcer().GetFilteredGroupingPolicy(0, userID)
+	if err != nil {
+		return nil, fmt.Errorf("casbin get filtered policy failed: %w", err)
+	}
+	return roles, nil
 }

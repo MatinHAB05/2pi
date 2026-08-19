@@ -259,3 +259,16 @@ func (s *rbacService) GetPermissionsForRole(ctx context.Context, tokenContext se
 	}
 	return perms, nil
 }
+
+func (s *rbacService) GetTargetAccountsForUser(ctx context.Context, tokenContext service_contract.TokenContext, userID string) ([][]string, error) {
+	accs, err := s.repo.GetTargetAccountsForUser(ctx, userID)
+	if err != nil {
+		s.logger.Error(logger.Service, logger.RBACService, "failed to get accounts for user", map[logger.ExtraKey]interface{}{
+			"accounts":          accs,
+			logger.UserID:       userID,
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, err
+	}
+	return accs, nil
+}

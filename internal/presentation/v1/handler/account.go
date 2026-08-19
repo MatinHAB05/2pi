@@ -291,12 +291,19 @@ func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, up
 	// 	return
 	// }
 
-	// h.rbacService.GetAccountsForUser()
+	accesAccounts, err := h.rbacService.GetTargetAccountsForUser(ctx, service_contract.MapTokenContextToService(nil), strconv.FormatInt(authToken.UserId, 10))
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get accounts for specif user", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+			logger.UserID:       authToken.UserId,
+		})
+		return
+	}
 
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      chatID,
-		Text:        MsgSwitchAccount,
-		ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{{ID: 123, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: true}, {ID: *authToken.AccountID, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: false}}, *authToken.AccountID),
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   MsgSwitchAccount + fmt.Sprintf(":\n%+v", accesAccounts),
+		// ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{{ID: 123, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: true}, {ID: *authToken.AccountID, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: false}}, *authToken.AccountID),
 	})
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send switch active account message", map[logger.ExtraKey]interface{}{

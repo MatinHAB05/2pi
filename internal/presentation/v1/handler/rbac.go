@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -86,7 +87,7 @@ func (h *RBACHandler) ShareAccountAccessHandler(ctx context.Context, b *bot.Bot,
 		_ = h.shareAccountConfirmInvite(ctx, b, chatID, authToken.UserId)
 		return
 	case ShareAccountAccessList:
-		_ = h.shareAccountList(ctx, b, chatID)
+		_ = h.shareAccountList(ctx, b, chatID, *authToken.AccountID)
 		return
 	case ShareAccountAccessDashboard:
 		_ = h.shareAccountGetBackToDashboard(ctx, b, chatID)
@@ -113,11 +114,22 @@ func (h *RBACHandler) shareAccountGetBackToDashboard(ctx context.Context, b *bot
 	return nil
 }
 
-func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID int64) error {
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID int64, accountID int64) error {
+	strAccountID := strconv.FormatInt(accountID, 10)
+	res, err := h.rbacService.GetUsersForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), strAccountID)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get users that have any access to a account ", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage:    err.Error(),
+			logger.TargetAccountID: strAccountID,
+		})
+		return err
+	}
+
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   "This is the access list:",
+		Text:   fmt.Sprint("Who can Use this account :\n%v", res),
 	})
+
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send share account list message", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
@@ -196,7 +208,7 @@ func (h *RBACHandler) inviteAccountRole(ctx context.Context, b *bot.Bot, chatID 
 	}
 
 	//TODO :  confineable ttl
-	h.shareaccountService.SetOTP(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), code, service_contract.ShareAccountOTP{
+	h.shareaccountService.SetShareAccountOTP(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), code, service_contract.ShareAccountOTP{
 		Role:          role,
 		BaseAccountID: *authToken.AccountID,
 		BaseUserID:    authToken.UserId,
@@ -258,7 +270,7 @@ func (h *RBACHandler) IsEnterConfirmShareAccessAccountCodeState(obj map[string]a
 func (h *RBACHandler) handlerEnterConfirmShareAccessAccountCode(ctx context.Context, b *bot.Bot, chatID int64, userID int64, update *models.Update) error {
 	code := update.Message.Text
 
-	err := h.shareaccountService.InvalidateShareAccountOTP(ctx, service_contract.MapTokenContextToService(nil), code)
+	sh, err := h.shareaccountService.GetShareAccountOTP(ctx, service_contract.MapTokenContextToService(nil), code)
 	if err != nil {
 		if errors.Is(err, exception.ErrShareAccountAccessOTPCodeNotFound) {
 			b.SendMessage(ctx, &bot.SendMessageParams{
@@ -266,23 +278,37 @@ func (h *RBACHandler) handlerEnterConfirmShareAccessAccountCode(ctx context.Cont
 				Text:   "❌ Invalid Share-Access-Account Code",
 			})
 		}
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get share account OTP invite code", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return err
+
+	}
+	err = h.shareaccountService.InvalidateShareAccountOTP(ctx, service_contract.MapTokenContextToService(nil), code)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to invalidate share account OTP invite code", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
 		return err
 	}
+
 	// correct otp code
-	// acc, err := h.accountService.Update(ctx, service_contract.MapTokenContextToServiceJustAuth(&tokencontext.AuthenticationContextToken{}), account)
-	// if err != nil {
-	// 	h.logger.Error(logger.Handler, logger.Telegram, "failed to update account", map[logger.ExtraKey]interface{}{
-	// 		logger.ErrorMessage: err.Error(),
-	// 	})
-	// 	b.SendMessage(ctx, &bot.SendMessageParams{
-	// 		ChatID: chatID,
-	// 		Text:   MsgErrUpdateAccountFailed,
-	// 	})
-	// 	return err
-	// }
+	//TODO : replace int instead of str(rbac service must in int not string base on business logic)
+	ok, err := h.rbacService.AddUserRoleForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), strconv.FormatInt(sh.BaseUserID, 10), strconv.FormatInt(sh.BaseAccountID, 10), sh.Role)
+	if err != nil || !ok {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to update account", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+			"ok":                ok,
+		})
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   MsgErrUpdateAccountFailed,
+		})
+		return err
+	}
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   MsgSuccessDone,
+		Text:   fmt.Sprintf(MsgSuccessDone+":\n%+v", sh),
 	})
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,

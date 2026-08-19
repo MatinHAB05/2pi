@@ -27,7 +27,7 @@ func NewShareAccountOTPService(
 	}
 }
 
-func (s *otpCacheService) SetOTP(
+func (s *otpCacheService) SetShareAccountOTP(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	otp string,
@@ -49,7 +49,7 @@ func (s *otpCacheService) SetOTP(
 	return nil
 }
 
-func (s *otpCacheService) GetOTP(
+func (s *otpCacheService) GetShareAccountOTP(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	otp string,
@@ -62,7 +62,7 @@ func (s *otpCacheService) GetOTP(
 		return nil, err
 	}
 	if cached == nil {
-		return nil, nil
+		return nil, exception.ErrShareAccountAccessOTPCodeNotFound
 	}
 
 	baseAccountID, err := strconv.ParseInt(cached.BaseAccountID, 10, 64)

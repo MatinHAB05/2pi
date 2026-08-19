@@ -12,7 +12,7 @@ type ShareAccountOTP struct {
 }
 
 type ShareAccountOTPService interface {
-	SetOTP(
+	SetShareAccountOTP(
 		ctx context.Context,
 		tokenContext TokenContext,
 		otp string,
@@ -20,7 +20,7 @@ type ShareAccountOTPService interface {
 		ttl time.Duration,
 	) error
 
-	GetOTP(
+	GetShareAccountOTP(
 		ctx context.Context,
 		tokenContext TokenContext,
 		otp string,
