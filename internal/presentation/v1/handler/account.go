@@ -20,6 +20,7 @@ import (
 type AccountHandler struct {
 	userService    service_contract.UserService
 	accountService service_contract.TargetAccountService
+	rbacService    service_contract.RBACService
 	commonHandler  *common.CommonHandler
 
 	logger logger.Logger
@@ -28,6 +29,7 @@ type AccountHandler struct {
 func NewAccountHandler(
 	userService service_contract.UserService,
 	accountService service_contract.TargetAccountService,
+	rbacService service_contract.RBACService,
 	logger logger.Logger,
 	commonHandler *common.CommonHandler,
 
@@ -35,6 +37,7 @@ func NewAccountHandler(
 	return AccountHandler{
 		userService:    userService,
 		accountService: accountService,
+		rbacService:    rbacService,
 		logger:         logger,
 		commonHandler:  commonHandler,
 	}
@@ -240,4 +243,59 @@ func (h *AccountHandler) handleEditAccountFieldState(ctx context.Context, b *bot
 	})
 	return nil
 
+}
+
+func (h *AccountHandler) ShowActiveAccount(ctx context.Context, b *bot.Bot, update *models.Update) {
+	chatID := helper.GetChatID(update)
+
+	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
+	if !ok {
+		return
+	}
+
+	user, err := h.userService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), authToken.UserId)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get user by id", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
+
+	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), *authToken.AccountID)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account by id", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   fmt.Sprintf("user : %v\naccount:%v", user, acc),
+	})
+}
+
+func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, update *models.Update) {
+	chatID := helper.GetChatID(update)
+
+	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
+	if !ok {
+		return
+	}
+
+	// user, err := h.userService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), authToken.UserId)
+	// if err != nil {
+	// 	h.logger.Error(logger.Handler, logger.Telegram, "failed to get user by id", map[logger.ExtraKey]interface{}{
+	// 		logger.ErrorMessage: err.Error(),
+	// 	})
+	// 	return
+	// }
+
+	// h.rbacService.GetAccountsForUser()
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatID,
+		Text:        MsgSwitchAccount,
+		ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{}, *authToken.AccountID),
+	})
 }

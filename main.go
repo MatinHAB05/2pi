@@ -10,6 +10,7 @@ import (
 	"github.com/MatinHAB05/2pi/config"
 	"github.com/MatinHAB05/2pi/internal/application/service"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/repository"
 	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
@@ -73,12 +74,12 @@ func main() {
 	// })
 
 	// casbin
-	// rbacEnf := rbac.NewCasbin(&config.Environment.Casbin, pgDB)
+	rbacEnf := rbac.NewCasbin(&config.Environment.Casbin, pgDB)
 
 	// repos
 	userRepo := repository.NewUserRepository(pgDB)
 	userinfocacheRepo := repository.NewUserInfoCacheRepository(redisClient)
-	// rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
+	rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
 	targetaccountRepo := repository.NewTargetAccountRepository(pgDB)
 	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient)
 	rs := router.Repos{
@@ -93,7 +94,7 @@ func main() {
 	// services
 	userinfoSrv := service.NewUserInfoCacheService(userinfocacheRepo, userRepo, appLogger)
 	userSrv := service.NewUserService(userRepo, appLogger, userinfoSrv)
-	// rbacSrv := service.NewRBACService(rbacRepo, appLogger)
+	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
 	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger)
 	ss := router.Services{
@@ -102,12 +103,16 @@ func main() {
 
 	// register handlers
 	commonHandler := common.NewCommonHandler(appLogger)
-	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, appLogger, &commonHandler)
+	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler)
 	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &commonHandler, appLogger)
+	userHandler := handler.NewUserHandler(userSrv, appLogger, &commonHandler)
+	rbacHandler := handler.NewRBACHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler)
 	hs := router.Handlers{
 		Basic:   basicHandler,
 		Account: accountHandler,
 		Common:  commonHandler,
+		User:    userHandler,
+		RBAC:    rbacHandler,
 	}
 
 	// bot

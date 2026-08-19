@@ -24,6 +24,7 @@ const (
 	MsgSettingsFormat      = "Bot settings for user ID: %d"
 	MsgUnknownCommand      = "unknown : /help"
 	MsgSuccessDone         = "✅ Done"
+	MsgSwitchAccount       = "Switch Account Message :"
 
 	// Input Prompts
 	MsgEnterNewDayDuration = "Enter New duration in days :"

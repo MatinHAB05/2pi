@@ -69,16 +69,11 @@ func SwitchAccountInlineKeyboard(accounts []AccountItem, activeID int64) *models
 			prefix = "🟢"
 			suffix = " [ACTIVE]"
 		}
-		label := fmt.Sprintf("%s @%s (%s)%s", prefix, acc.Username, acc.Role, suffix)
+		label := fmt.Sprintf("%s @%s (%s)%s", prefix, acc.Role, suffix)
 		rows = append(rows, []models.InlineKeyboardButton{
 			{Text: label, CallbackData: "switch:select:" + strconv.FormatInt(acc.ID, 10)},
 		})
 	}
-
-	rows = append(rows,
-		[]models.InlineKeyboardButton{{Text: "➕ Create New Target Account", CallbackData: "acc:create"}},
-		[]models.InlineKeyboardButton{{Text: "🚪 Logout (Clear Selection)", CallbackData: "switch:logout"}},
-	)
 
 	return &models.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
