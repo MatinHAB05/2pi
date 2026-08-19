@@ -8,6 +8,7 @@ type ExtraKey string
 const (
 	Panic      Category = "Panic"
 	General    Category = "General"
+	Pkg        Category = "Pkg"
 	IO         Category = "IO"
 	Handler    Category = "Handler"
 	Internal   Category = "Internal"
@@ -21,6 +22,7 @@ const (
 const (
 	MPanic          SubCategory = "Recovery-Middleware"
 	LoggerM         SubCategory = "Logger-Middleware"
+	RandomService   SubCategory = "Random Service"
 	ExternalService SubCategory = "External"
 	Telegram        SubCategory = "Telegram"
 	CacheService    SubCategory = "Cache Service"

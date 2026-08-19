@@ -19,6 +19,7 @@ type BasicHandler struct {
 	userService    service_contract.UserService
 	accountService service_contract.TargetAccountService
 
+	rbacHandler    *RBACHandler
 	accountHandler *AccountHandler
 	commonHandler  *common.CommonHandler
 	logger         logger.Logger
@@ -28,6 +29,7 @@ func NewBasicHandler(
 	userService service_contract.UserService,
 	accountService service_contract.TargetAccountService,
 	accountHandler *AccountHandler,
+	rbacHandler *RBACHandler,
 	commonHandler *common.CommonHandler,
 	logger logger.Logger,
 ) BasicHandler {
@@ -37,6 +39,7 @@ func NewBasicHandler(
 		accountHandler: accountHandler,
 		accountService: accountService,
 		commonHandler:  commonHandler,
+		rbacHandler:    rbacHandler,
 	}
 }
 
@@ -45,7 +48,8 @@ func (h *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.
 	chatID := helper.GetChatID(update)
 
 	if obj, ok := UserStates[userID]; ok { // stateful scenario
-		if h.accountHandler.IsEditAccountFieldState(obj, update) {
+		switch {
+		case h.accountHandler.IsEditAccountFieldState(obj, update):
 			err := h.accountHandler.handleEditAccountFieldState(ctx, b, chatID, userID, update)
 			if err != nil {
 				h.logger.Error(logger.Handler, logger.Telegram, "return err from handleEditAccountFieldState", map[logger.ExtraKey]interface{}{
@@ -53,7 +57,19 @@ func (h *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.
 				})
 				return
 			}
+			return
+
+		case h.rbacHandler.IsEnterConfirmShareAccessAccountCodeState(obj, update):
+			err := h.rbacHandler.handlerEnterConfirmShareAccessAccountCode(ctx, b, chatID, userID, update)
+			if err != nil {
+				h.logger.Error(logger.Handler, logger.Telegram, "return err from handlerEnterConfirmShareAccessAccountCode", map[logger.ExtraKey]interface{}{
+					logger.ErrorMessage: err.Error(),
+				})
+				return
+			}
+			return
 		}
+
 	}
 
 	h.logger.Info(logger.Handler, logger.Telegram, "route not found", nil)

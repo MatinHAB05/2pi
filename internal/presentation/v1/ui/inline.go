@@ -108,6 +108,7 @@ func ShareAccessInlineKeyboard() *models.InlineKeyboardMarkup {
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
 				{Text: "➕ Invite New User", CallbackData: "acc:share:handler:invite"},
+				{Text: "🫂 Confirm Invite", CallbackData: "acc:share:handler:confirm-invite"},
 			},
 			{
 				{Text: "📋 List Active Collaborators", CallbackData: "acc:share:handler:list"},
@@ -145,6 +146,21 @@ func AcceptInviteInlineKeyboard(token string) *models.InlineKeyboardMarkup {
 			{
 				{Text: "✅ Accept Invitation", CallbackData: "invite:accept:" + token},
 				{Text: "❌ Decline", CallbackData: "invite:decline:" + token},
+			},
+		},
+	}
+}
+
+// OnboardingInlineKeyboard guides new users to complete their profile setup
+func ChangeLanguageInlineKeyboard() *models.InlineKeyboardMarkup {
+	return &models.InlineKeyboardMarkup{
+		InlineKeyboard: [][]models.InlineKeyboardButton{
+			{
+				{Text: "🇮🇷 Farsi", CallbackData: "user:fields:field:language:fa"},
+				{Text: "🇺🇸 English", CallbackData: "user:fields:field:language:eng"},
+			},
+			{
+				{Text: "❌ Cancel", CallbackData: "user:fields:field:language:cancel"},
 			},
 		},
 	}

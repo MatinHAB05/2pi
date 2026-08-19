@@ -7,6 +7,7 @@ import (
 	"time"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
+	"github.com/MatinHAB05/2pi/internal/domain/exception"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
@@ -87,11 +88,22 @@ func (s *otpCacheService) GetOTP(
 	}, nil
 }
 
-func (s *otpCacheService) InvalidateOTP(
+func (s *otpCacheService) InvalidateShareAccountOTP(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	otp string,
 ) error {
+	ex, err := s.cacheRepo.Exists(ctx, otp)
+	if err != nil || ex == nil {
+		s.logger.Error(logger.Service, logger.CacheService, "failed to check otp cache existence", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return err
+	}
+	if !*ex {
+		return exception.ErrShareAccountAccessOTPCodeNotFound
+	}
+
 	if err := s.cacheRepo.Delete(ctx, otp); err != nil {
 		s.logger.Error(logger.Service, logger.CacheService, "failed to invalidate otp cache", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),

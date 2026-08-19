@@ -26,7 +26,7 @@ type ShareAccountOTPService interface {
 		otp string,
 	) (*ShareAccountOTP, error)
 
-	InvalidateOTP(
+	InvalidateShareAccountOTP(
 		ctx context.Context,
 		tokenContext TokenContext,
 		otp string,

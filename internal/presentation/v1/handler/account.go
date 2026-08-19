@@ -293,9 +293,16 @@ func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, up
 
 	// h.rbacService.GetAccountsForUser()
 
-	b.SendMessage(ctx, &bot.SendMessageParams{
+	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
 		Text:        MsgSwitchAccount,
 		ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{}, *authToken.AccountID),
 	})
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send switch active account message", map[logger.ExtraKey]interface{}{
+			logger.UserID:       authToken.UserId,
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
 }

@@ -82,6 +82,7 @@ func main() {
 	rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
 	targetaccountRepo := repository.NewTargetAccountRepository(pgDB)
 	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient)
+	shareccountRepo := repository.NewShareAccountOTPCacheRepository(redisClient)
 	rs := router.Repos{
 		UserAccCache: useracccahceRepo,
 	}
@@ -92,21 +93,24 @@ func main() {
 	// err = rbacSeeder.SeedPermissions(ctx)
 
 	// services
+	randomSrv := service.NewRandomService()
 	userinfoSrv := service.NewUserInfoCacheService(userinfocacheRepo, userRepo, appLogger)
 	userSrv := service.NewUserService(userRepo, appLogger, userinfoSrv)
 	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
 	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger)
+	shareaccountSrv := service.NewShareAccountOTPService(shareccountRepo, appLogger)
 	ss := router.Services{
 		UserAccountCache: useraccountSrv,
+		UserInfoCache:    userinfoSrv,
 	}
 
 	// register handlers
 	commonHandler := common.NewCommonHandler(appLogger)
 	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler)
-	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &commonHandler, appLogger)
+	rbacHandler := handler.NewRBACHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler, randomSrv, shareaccountSrv)
+	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &rbacHandler, &commonHandler, appLogger)
 	userHandler := handler.NewUserHandler(userSrv, appLogger, &commonHandler)
-	rbacHandler := handler.NewRBACHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler)
 	hs := router.Handlers{
 		Basic:   basicHandler,
 		Account: accountHandler,

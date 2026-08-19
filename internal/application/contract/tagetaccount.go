@@ -27,7 +27,6 @@ type UpdateTargetAccountRequest struct {
 	OwnerUserID int64 `json:"owner_user_id"`
 	DayDuration int
 	Period      int
-	UserLang    entity.Lang
 	Description string
 	Enable      bool
 }
@@ -37,7 +36,6 @@ type TargetAccountResponse struct {
 	OwnerUserID int64 `json:"owner_user_id"`
 	DayDuration int
 	Period      int
-	UserLang    entity.Lang
 	Description string
 	Enable      bool
 }
@@ -50,8 +48,7 @@ func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
 		ID:          int64(ta.ID),
 		OwnerUserID: ta.OwnerUserID,
 		DayDuration: ta.DayDuration,
-		Period:      ta.DayDuration,
-		UserLang:    entity.LangEng,
+		Period:      ta.Period,
 		Description: ta.Description,
 		Enable:      ta.Enable,
 	}

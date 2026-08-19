@@ -8,6 +8,8 @@ import (
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
 
+// TODO : check role string before use it
+// TODO : seed = action-role
 type rbacService struct {
 	repo   repository_contract.RBACRepository
 	logger logger.Logger

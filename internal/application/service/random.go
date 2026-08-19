@@ -22,3 +22,7 @@ func (s *randomService) GeneratePositiveIntRandomNumber(digits int) int64 {
 func (s *randomService) GeneratePositiveIntRandomNumberInRange(min, max int64) int64 {
 	return s.engine.GeneratePositiveIntRandomNumberInRange(min, max)
 }
+
+func (s *randomService) GenerateRandomBase58String(len int) (string, error) {
+	return s.engine.GenerateRandomBase58String(len)
+}
