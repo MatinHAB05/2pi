@@ -12,4 +12,5 @@ var (
 	ErrEmptyAction           = errors.New("action cannot be empty")
 	ErrUserIDNotFound        = errors.New("user_id missing from context")
 	ErrInvalidUserIDType     = errors.New("user_id in context has invalid type")
+	ErrLangNotFound          = errors.New("lang not found in context")
 )

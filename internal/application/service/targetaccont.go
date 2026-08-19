@@ -91,7 +91,6 @@ func (s *targetAccountService) Update(ctx context.Context, tokenContext service_
 		OwnerUserID: req.OwnerUserID,
 		DayDuration: req.DayDuration,
 		Period:      req.Period,
-		UserLang:    req.UserLang,
 		Description: req.Description,
 		Enable:      req.Enable,
 	}

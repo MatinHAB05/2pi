@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
@@ -28,7 +27,8 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 				AccountOwnerID: nil,
 			}
 
-			account, err := userAccCache.GetOrSyncUserAccount(ctx, service_contract.MapTokenContextToService(&token), strconv.Itoa(int(userID)), "NO MATTER", time.Hour)
+			// TODO : configurable ttl
+			account, err := userAccCache.GetOrSyncUserAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, "NO MATTER", time.Hour)
 			if err != nil {
 				applogger.Warn(logger.General, logger.Startup, "failed to get user-account from redis", map[logger.ExtraKey]interface{}{
 					logger.ErrorMessage: err.Error(),
@@ -41,7 +41,7 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 				token.AccountOwnerID = &account.AccountOwnerID
 			}
 
-			ctx = tokencontext.SetTokenInContext(ctx, &token)
+			ctx = tokencontext.SetAuthenticationTokenInContext(ctx, &token)
 
 			next(ctx, b, update)
 		}

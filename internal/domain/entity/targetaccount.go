@@ -3,10 +3,9 @@ package entity
 type TargetAccount struct {
 	BaseEntity
 
-	OwnerUserID int64  `gorm:"not null;index"`
+	OwnerUserID int64 `gorm:"not null;index"`
 	DayDuration int
 	Period      int
-	UserLang    Lang `gorm:"type:lang;not null;default:'fa'"`
 	Description string
 	Enable      bool
 	// Relations

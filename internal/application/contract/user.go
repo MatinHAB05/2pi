@@ -20,11 +20,13 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	ID int64 `json:"id"`
+	ID   int64       `json:"id"`
+	Lang entity.Lang `json:"lang"`
 }
 
 type UserResponse struct {
 	ID             int64                   `json:"id"`
+	Lang           entity.Lang             `json:"lang"`
 	TargetAccounts []TargetAccountResponse `json:"target_accounts,omitempty"`
 }
 
@@ -33,7 +35,8 @@ func ToUserResponse(u *entity.User) *UserResponse {
 		return nil
 	}
 	res := &UserResponse{
-		ID: int64(u.ID),
+		ID:   int64(u.ID),
+		Lang: u.UserLang,
 	}
 	if len(u.TargetAccounts) > 0 {
 		res.TargetAccounts = ToTargetAccountSliceResponse(u.TargetAccounts)

@@ -10,20 +10,27 @@ import (
 )
 
 type userService struct {
-	repo   repository_contract.UserRepository
-	logger logger.Logger
+	repo                 repository_contract.UserRepository
+	userInfoCacheService service_contract.UserInfoCacheService
+	logger               logger.Logger
 }
 
-func NewUserService(repo repository_contract.UserRepository, log logger.Logger) *userService {
+func NewUserService(
+	repo repository_contract.UserRepository,
+	log logger.Logger,
+	userInfoCacheService service_contract.UserInfoCacheService,
+) *userService {
 	return &userService{
-		repo:   repo,
-		logger: log,
+		repo:                 repo,
+		logger:               log,
+		userInfoCacheService: userInfoCacheService,
 	}
 }
 
 func (s *userService) Create(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.CreateUserRequest) (*service_contract.UserResponse, error) {
 	user := &entity.User{
 		BaseEntity: entity.BaseEntity{ID: int64(req.ID)},
+		UserLang:   entity.LangFa,
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
@@ -71,11 +78,22 @@ func (s *userService) Update(ctx context.Context, tokenContext service_contract.
 		BaseEntity: entity.BaseEntity{
 			ID: int64(req.ID),
 		},
+		UserLang: req.Lang,
 	}
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		s.logger.Error(logger.Service, logger.UserService, "failed to update user", map[logger.ExtraKey]interface{}{
 			logger.UserID:       req.ID,
+			"new_user_id":       user.ID,
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, err
+	}
+
+	if err := s.userInfoCacheService.InvalidateCache(ctx, tokenContext, user.ID); err != nil {
+		s.logger.Error(logger.Service, logger.UserService, "failed to InvalidateCache user info", map[logger.ExtraKey]interface{}{
+			logger.UserID:       req.ID,
+			"new_user_id":       user.ID,
 			logger.ErrorMessage: err.Error(),
 		})
 		return nil, err

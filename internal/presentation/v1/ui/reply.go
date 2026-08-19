@@ -16,6 +16,7 @@ func MainMenuReplyKeyboard() *models.ReplyKeyboardMarkup {
 			},
 			{
 				{Text: "ℹ️ Help / Info"},
+				{Text: "⚙️ Setting"},
 			},
 		},
 		ResizeKeyboard: true,

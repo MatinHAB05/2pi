@@ -11,6 +11,7 @@ import (
 	"github.com/MatinHAB05/2pi/internal/application/service"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/repository"
+	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/router"
@@ -76,6 +77,7 @@ func main() {
 
 	// repos
 	userRepo := repository.NewUserRepository(pgDB)
+	userinfocacheRepo := repository.NewUserInfoCacheRepository(redisClient)
 	// rbacRepo := repository.NewRBACRepository(pgDB, rbacEnf)
 	targetaccountRepo := repository.NewTargetAccountRepository(pgDB)
 	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient)
@@ -89,7 +91,8 @@ func main() {
 	// err = rbacSeeder.SeedPermissions(ctx)
 
 	// services
-	userSrv := service.NewUserService(userRepo, appLogger)
+	userinfoSrv := service.NewUserInfoCacheService(userinfocacheRepo, userRepo, appLogger)
+	userSrv := service.NewUserService(userRepo, appLogger, userinfoSrv)
 	// rbacSrv := service.NewRBACService(rbacRepo, appLogger)
 	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger)
@@ -98,13 +101,13 @@ func main() {
 	}
 
 	// register handlers
-	commonHandler := handler.NewCommonHandler(appLogger)
+	commonHandler := common.NewCommonHandler(appLogger)
 	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, appLogger, &commonHandler)
 	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &commonHandler, appLogger)
 	hs := router.Handlers{
 		Basic:   basicHandler,
 		Account: accountHandler,
-		
+		Common:  commonHandler,
 	}
 
 	// bot
@@ -137,6 +140,8 @@ func main() {
 			{Command: "switch", Description: "Switch active target account"},
 			{Command: "share", Description: "Manage access & permissions"},
 			{Command: "settings", Description: "Edit target account details"},
+			{Command: "falang", Description: "Change Language To Farsi"},
+			{Command: "englang", Description: "Change Language To English"},
 		},
 	})
 

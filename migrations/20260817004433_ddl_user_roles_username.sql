@@ -5,6 +5,7 @@ CREATE TYPE role_name AS ENUM ('admin', 'owner', 'editor', 'viewer');
 
 CREATE TABLE users (
     id BIGINT PRIMARY KEY,
+    user_lang lang NOT NULL DEFAULT 'fa',
     -- Telegram User ID 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -16,9 +17,9 @@ CREATE TABLE target_accounts (
     owner_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     day_duration INTEGER,
     period INTEGER,
-    user_lang lang NOT NULL DEFAULT 'fa',
     description TEXT,
     enable BOOLEAN DEFAULT false,
+    UNIQUE(owner_user_id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE

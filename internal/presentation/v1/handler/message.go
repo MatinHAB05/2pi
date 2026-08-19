@@ -19,7 +19,6 @@ const (
 
 	// Response & Navigation Messages
 	MsgWelcome             = "👋 Welcome to Period Tracker Bot!"
-	MsgDashboardWelcome    = "👋 Welcome to Period Tracker Bot!\n\nWe created your default account profile. Tracking is disabled until setup is completed."
 	MsgEditAccountSettings = "⚙️ Edit Account Settings \n\nSelect a parameter to update:"
 	MsgHelp                = "Need help? Here are the available commands..."
 	MsgSettingsFormat      = "Bot settings for user ID: %d"

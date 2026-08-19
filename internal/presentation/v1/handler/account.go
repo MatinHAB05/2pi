@@ -10,6 +10,7 @@ import (
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/tokencontext"
 	"github.com/MatinHAB05/2pi/internal/helper"
+	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/ui"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/go-telegram/bot"
@@ -19,7 +20,7 @@ import (
 type AccountHandler struct {
 	userService    service_contract.UserService
 	accountService service_contract.TargetAccountService
-	commonHandler  *CommonHandler
+	commonHandler  *common.CommonHandler
 
 	logger logger.Logger
 }
@@ -28,7 +29,7 @@ func NewAccountHandler(
 	userService service_contract.UserService,
 	accountService service_contract.TargetAccountService,
 	logger logger.Logger,
-	commonHandler *CommonHandler,
+	commonHandler *common.CommonHandler,
 
 ) AccountHandler {
 	return AccountHandler{
@@ -42,11 +43,11 @@ func NewAccountHandler(
 func (h *AccountHandler) CompleteAccountSetup(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := helper.GetChatID(update)
 
-	authToken, ok := h.commonHandler.getAuthTokenWithAccount(ctx)
+	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
 	if !ok {
 		return
 	}
-	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID)
+	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), *authToken.AccountID)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account by id", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
@@ -65,7 +66,7 @@ func (h *AccountHandler) EditAccountFields(ctx context.Context, b *bot.Bot, upda
 	chatID := helper.GetChatID(update)
 	messageID := helper.GetMessageID(update)
 
-	authToken, ok := h.commonHandler.getAuthTokenWithAccount(ctx)
+	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
 	if !ok {
 		return
 	}
@@ -160,13 +161,13 @@ func (h *AccountHandler) editFieldPeroid(value string, ctx context.Context, b *b
 }
 
 func (h *AccountHandler) editFieldToggleEnableStatus(ctx context.Context, b *bot.Bot, chatID int64, authToken *tokencontext.AuthenticationContextToken) error {
-	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID)
+	acc, err := h.accountService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), *authToken.AccountID)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get account", map[logger.ExtraKey]interface{}{})
 		return err
 	}
 	log.Println(acc.Enable)
-	h.accountService.UpdateStatus(ctx, service_contract.MapTokenContextToService(authToken), *authToken.AccountID, !acc.Enable)
+	h.accountService.UpdateStatus(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), *authToken.AccountID, !acc.Enable)
 	log.Println(!acc.Enable)
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
@@ -178,7 +179,7 @@ func (h *AccountHandler) editFieldToggleEnableStatus(ctx context.Context, b *bot
 func (h *AccountHandler) editFieldGetBackToDashboard(ctx context.Context, b *bot.Bot, chatID int64) error {
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
-		Text:        MsgDashboardWelcome,
+		Text:        MsgWelcome,
 		ReplyMarkup: ui.MainMenuReplyKeyboard(),
 	})
 
@@ -217,7 +218,7 @@ func (h *AccountHandler) handleEditAccountFieldState(ctx context.Context, b *bot
 		account.Description = value
 	}
 
-	acc, err := h.accountService.Update(ctx, service_contract.MapTokenContextToService(&tokencontext.AuthenticationContextToken{}), account)
+	acc, err := h.accountService.Update(ctx, service_contract.MapTokenContextToServiceJustAuth(&tokencontext.AuthenticationContextToken{}), account)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to update account", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),

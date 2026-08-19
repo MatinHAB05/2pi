@@ -3,29 +3,28 @@ package service_contract
 import (
 	"context"
 	"time"
+
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
 )
 
-type UserAccountCache struct {
-	AccountID      int64
-	AccountOwnerID int64
+type UserInfoCache struct {
+	Lang entity.Lang
 }
 
-type UserAccountCacheService interface {
-	GetOrSyncUserAccount(
+type UserInfoCacheService interface {
+	GetOrSyncUserInfo(
 		ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
-		reqAccountID string,
 		ttl time.Duration,
-	) (*UserAccountCache, error)
+	) (*UserInfoCache, error)
 
-	SyncUserAccount(
+	SyncUserInfo(
 		ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
-		reqAccountID string,
 		ttl time.Duration,
-	) (*UserAccountCache, error)
+	) (*UserInfoCache, error)
 
 	InvalidateCache(
 		ctx context.Context,

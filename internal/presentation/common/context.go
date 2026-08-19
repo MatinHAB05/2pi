@@ -1,4 +1,4 @@
-package handler
+package common
 
 import (
 	"context"
@@ -19,8 +19,8 @@ func NewCommonHandler(
 	}
 }
 
-func (h *CommonHandler) getAuthToken(ctx context.Context) (*tokencontext.AuthenticationContextToken, bool) {
-	authToken, err := tokencontext.GetTokenFromContext(ctx)
+func (h *CommonHandler) GetAuthToken(ctx context.Context) (*tokencontext.AuthenticationContextToken, bool) {
+	authToken, err := tokencontext.GetAuthenticationTokenFromContext(ctx)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get token from context", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
@@ -30,8 +30,8 @@ func (h *CommonHandler) getAuthToken(ctx context.Context) (*tokencontext.Authent
 	return authToken, true
 }
 
-func (h *CommonHandler) getAuthTokenWithAccount(ctx context.Context) (*tokencontext.AuthenticationContextToken, bool) {
-	authToken, ok := h.getAuthToken(ctx)
+func (h *CommonHandler) GetAuthTokenWithAccount(ctx context.Context) (*tokencontext.AuthenticationContextToken, bool) {
+	authToken, ok := h.GetAuthToken(ctx)
 	if !ok {
 		return nil, false
 	}
@@ -42,4 +42,15 @@ func (h *CommonHandler) getAuthTokenWithAccount(ctx context.Context) (*tokencont
 	}
 
 	return authToken, true
+}
+
+func (h *CommonHandler) GetUserInfoToken(ctx context.Context) (*tokencontext.UserInfoContextToken, bool) {
+	userInfoToken, err := tokencontext.GetInfoTokenFromContext(ctx)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get token from context", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, false
+	}
+	return userInfoToken, true
 }
