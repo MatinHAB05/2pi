@@ -40,6 +40,7 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 			if account != nil {
 				token.AccountID = &account.AccountID
 				token.AccountOwnerID = &account.AccountOwnerID
+				token.UserRole = string(account.Role)
 			}
 
 			ctx = tokencontext.SetAuthenticationTokenInContext(ctx, &token)

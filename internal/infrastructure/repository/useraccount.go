@@ -31,6 +31,7 @@ func (ucr *userAccountCacheRepository) Set(ctx context.Context, userID string, c
 	fields := map[string]interface{}{
 		"account_id":       cache.AccountID,
 		"account_owner_id": cache.AccountOwnerID,
+		"user_role":        cache.Role,
 	}
 
 	pipe := ucr.client.GetRDB().Pipeline()
@@ -64,6 +65,7 @@ func (ucr *userAccountCacheRepository) Get(ctx context.Context, userID string) (
 	return &repository_contract.UserAccountCache{
 		AccountID:      res["account_id"],
 		AccountOwnerID: res["account_owner_id"],
+		Role:           res["user_role"],
 	}, nil
 }
 
@@ -86,5 +88,3 @@ func (ucr *userAccountCacheRepository) Exists(ctx context.Context, userID string
 
 	return count > 0, nil
 }
-
-

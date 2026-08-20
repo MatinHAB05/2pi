@@ -79,6 +79,7 @@ func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 		return &service_contract.UserAccountCache{
 			AccountID:      accountID,
 			AccountOwnerID: accountOwnerID,
+			Role:           entity.Role(cached.Role),
 		}, nil
 	}
 
@@ -173,6 +174,7 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 	repoCacheData := &repository_contract.UserAccountCache{
 		AccountID:      strconv.FormatInt(accountID, 10),
 		AccountOwnerID: strconv.FormatInt(userID, 10),
+		Role:           string(entity.RoleOwner),
 	}
 
 	// Invalidate & Set
@@ -188,6 +190,7 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 	return &service_contract.UserAccountCache{
 		AccountID:      accountID,
 		AccountOwnerID: userID,
+		Role:           entity.RoleOwner,
 	}, nil
 }
 
@@ -204,7 +207,7 @@ func (s *userAccountCacheService) InvalidateCache(ctx context.Context, tokenCont
 	return nil
 }
 
-func (s *userAccountCacheService) Set(ctx context.Context, tokenContext service_contract.TokenContext, userID int64, accountID int64, ttl time.Duration) error {
+func (s *userAccountCacheService) Set(ctx context.Context, tokenContext service_contract.TokenContext, userID int64, accountID int64, role string, ttl time.Duration) error {
 	userIDStr := strconv.FormatInt(userID, 10)
 
 	acc, err := s.accountRepo.GetByID(ctx, accountID)
@@ -215,6 +218,7 @@ func (s *userAccountCacheService) Set(ctx context.Context, tokenContext service_
 	err = s.cacheRepo.Set(ctx, userIDStr, &repository_contract.UserAccountCache{
 		AccountID:      strconv.FormatInt(accountID, 10),
 		AccountOwnerID: strconv.FormatInt(acc.OwnerUserID, 10),
+		Role:           role,
 	}, ttl)
 
 	if err != nil {

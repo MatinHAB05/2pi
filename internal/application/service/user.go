@@ -294,7 +294,7 @@ func (s *userService) toUserAccountsRoleResponse(
 			}
 
 			accRole = &service_contract.AccountsRoleResponse{
-				AccountID: accResp,
+				Account: accResp,
 				Roles:     make([]string, 0),
 			}
 			accountRolesMap[item.TargetAccountID] = accRole

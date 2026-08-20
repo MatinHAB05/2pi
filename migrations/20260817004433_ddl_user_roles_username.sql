@@ -54,6 +54,8 @@ DROP TABLE IF EXISTS target_accounts;
 
 DROP TABLE IF EXISTS users;
 
+DROP TABLE IF EXISTS casbin_rule;
+
 DROP TYPE IF EXISTS role_name;
 
 DROP TYPE IF EXISTS lang;

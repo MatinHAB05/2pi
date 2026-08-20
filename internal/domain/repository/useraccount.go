@@ -15,4 +15,5 @@ type UserAccountCacheRepository interface {
 type UserAccountCache struct {
 	AccountID      string
 	AccountOwnerID string
+	Role           string
 }

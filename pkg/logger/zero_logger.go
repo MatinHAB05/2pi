@@ -38,7 +38,10 @@ type indentedWriter struct {
 func (w indentedWriter) Write(p []byte) (n int, err error) {
 	var buf bytes.Buffer
 	if err := json.Indent(&buf, p, "", "  "); err == nil {
-		return w.out.Write(buf.Bytes())
+		if _, err := w.out.Write(buf.Bytes()); err != nil {
+			return 0, err
+		}
+		return len(p), nil
 	}
 	return w.out.Write(p)
 }

@@ -139,7 +139,7 @@ func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID i
 
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   WhoCanAccessToThisAccountMsg(users),
+		Text:   WhoCanAccessToThisAccountMsg(users, accountID),
 	})
 
 	h.logger.Info("", "", "", map[logger.ExtraKey]interface{}{

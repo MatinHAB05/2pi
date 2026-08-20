@@ -10,12 +10,14 @@ const (
 	UserIDKey         contextKey = "user_id"
 	AccountIDKey      contextKey = "account_id"
 	AccountOwnerIDKey contextKey = "account_owner_id"
+	UserRoleKey       contextKey = "user_role"
 )
 
 type AuthenticationContextToken struct {
 	UserId         int64
 	AccountID      *int64
 	AccountOwnerID *int64
+	UserRole       string
 }
 
 // GetAuthenticationTokenFromContext constructs an AuthenticationContextToken from context key-value pairs.
@@ -63,6 +65,11 @@ func GetAuthenticationTokenFromContext(ctx context.Context) (*AuthenticationCont
 			token.AccountOwnerID = &v
 		}
 	}
+	rawUserRole := ctx.Value(UserRoleKey)
+	if rawUserRole == nil {
+		return nil, exception.ErrUserIDNotFound
+	}
+	token.UserRole = rawUserRole.(string)
 
 	return token, nil
 }
@@ -73,6 +80,7 @@ func SetAuthenticationTokenInContext(ctx context.Context, token *AuthenticationC
 	}
 
 	ctx = context.WithValue(ctx, UserIDKey, token.UserId)
+	ctx = context.WithValue(ctx, UserRoleKey, token.UserRole)
 
 	if token.AccountID != nil {
 		ctx = context.WithValue(ctx, AccountIDKey, token.AccountID)

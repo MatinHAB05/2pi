@@ -49,8 +49,8 @@ type UserAccountsRoleResponse struct {
 }
 
 type AccountsRoleResponse struct {
-	AccountID *TargetAccountResponse
-	Roles     []string
+	Account *TargetAccountResponse
+	Roles   []string
 }
 
 func ToUserResponse(u *entity.User) *UserResponse {

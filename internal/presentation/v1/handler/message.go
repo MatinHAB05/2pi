@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
@@ -73,7 +72,7 @@ const (
 	MsgErrUpdateAccountFailed = "❌ Failed to update account settings. Please try again later."
 )
 
-func WhoCanAccessToThisAccountMsg(users []*service_contract.UserAccountsRoleResponse) string {
+func WhoCanAccessToThisAccountMsg(users []*service_contract.UserAccountsRoleResponse, accountID int64) string {
 	if len(users) == 0 {
 		return "No users have access to this account."
 	}
@@ -86,10 +85,11 @@ func WhoCanAccessToThisAccountMsg(users []*service_contract.UserAccountsRoleResp
 			continue
 		}
 		sb.WriteString(ShowUserInfo(users[i].UserResponse))
-		if len(users[i].AccountsRoles) != 1 {
-			log.Println("WTF!!!! - check `WhoCanAccessToThisAccountMsg`")
-		}
-		for acc := range users[i].AccountsRoles { // MUST BE 1 ACCOUNT!!!
+
+		for acc := range users[i].AccountsRoles {
+			if users[i].AccountsRoles[acc].Account.ID != accountID {
+				continue
+			}
 			for _, role := range users[i].AccountsRoles[acc].Roles {
 				sb.WriteString(fmt.Sprintf("• Role : `%s`", role))
 			}

@@ -59,19 +59,19 @@ func CancelEditInlineKeyboard() *models.InlineKeyboardMarkup {
 }
 
 // SwitchAccountInlineKeyboard dynamically lists target accounts user has access to
-func SwitchAccountInlineKeyboard(accounts []*AccountItem, currentID int64) *models.InlineKeyboardMarkup {
+func SwitchAccountInlineKeyboard(accounts []*AccountItem, currentID int64, role string) *models.InlineKeyboardMarkup {
 	var rows [][]models.InlineKeyboardButton
 
 	for i := range accounts {
 		prefix := "⚪"
 		suffix := ""
-		if accounts[i].ID == currentID {
+		if accounts[i].ID == currentID && accounts[i].Role == role {
 			prefix = "🟢"
 			suffix = " [CURRENT]"
 		}
 		label := fmt.Sprintf("\u200E %s %s (%s)%s", prefix, accounts[i].Description, accounts[i].Role, suffix)
 		rows = append(rows, []models.InlineKeyboardButton{
-			{Text: label, CallbackData: "acc:switch:select:handler:" + strconv.FormatInt(accounts[i].ID, 10)},
+			{Text: label, CallbackData: "acc:switch:select:handler:" + strconv.FormatInt(accounts[i].ID, 10) + ":" + accounts[i].Role},
 		})
 	}
 

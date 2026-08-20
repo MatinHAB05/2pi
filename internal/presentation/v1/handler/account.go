@@ -299,12 +299,20 @@ func (h *AccountHandler) SwitchCurrentAccount(ctx context.Context, b *bot.Bot, u
 		return
 	}
 
+	h.logger.Info("", "", "", map[logger.ExtraKey]interface{}{
+		"accounts": accounts,
+	})
+
 	items := ui.MapTargetAccountsToAccountItems(accounts)
+
+	h.logger.Info("", "", "", map[logger.ExtraKey]interface{}{
+		"ui-items": items,
+	})
 
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
 		Text:        MsgSwitchAccount + ":",
-		ReplyMarkup: ui.SwitchAccountInlineKeyboard(items, *authToken.AccountID),
+		ReplyMarkup: ui.SwitchAccountInlineKeyboard(items, *authToken.AccountID, authToken.UserRole),
 	})
 
 	if err != nil {
@@ -326,7 +334,8 @@ func (h *AccountHandler) SwitchCurrentAccountHandler(ctx context.Context, b *bot
 	}
 
 	log.Println(update.CallbackQuery.Data)
-	strReqAccountID := strings.TrimPrefix(update.CallbackQuery.Data, SwitchCurrentAccountHandlerPrefix)
+	temp := strings.Split(strings.TrimPrefix(update.CallbackQuery.Data, SwitchCurrentAccountHandlerPrefix), ":")
+	strReqAccountID, role := temp[0], temp[1]
 	reqAccountID, err := strconv.ParseInt(strReqAccountID, 10, 64)
 	if err != nil {
 		h.logger.Error(logger.Service, logger.CacheService, "failed to parse req_account_id from query data", map[logger.ExtraKey]interface{}{
@@ -337,7 +346,7 @@ func (h *AccountHandler) SwitchCurrentAccountHandler(ctx context.Context, b *bot
 	}
 
 	//TODO : ttl
-	err = h.useraccountService.Set(ctx, service_contract.MapTokenContextToService(nil), authToken.UserId, reqAccountID, time.Hour)
+	err = h.useraccountService.Set(ctx, service_contract.MapTokenContextToService(nil), authToken.UserId, reqAccountID, role, time.Hour)
 	if err != nil {
 		h.logger.Error(logger.Service, logger.CacheService, "failed to switch/set current account", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage:    err.Error(),
