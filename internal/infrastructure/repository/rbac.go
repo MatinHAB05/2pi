@@ -9,6 +9,32 @@ import (
 	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
 )
 
+const (
+	// Grouping Policy ('g') layout: g = subject, resource, role
+	gIndexUserID          = 0
+	gIndexTargetAccountID = 1
+	gIndexRole            = 2
+
+	// Permission Policy ('p') layout: p = role, action
+	pIndexRole   = 0
+	pIndexAction = 1
+)
+
+func buildGPolicy(userID, targetAccountID, role string) []string {
+	g := make([]string, 3)
+	g[gIndexUserID] = userID
+	g[gIndexTargetAccountID] = targetAccountID
+	g[gIndexRole] = role
+	return g
+}
+
+func buildPPolicy(role, action string) []string {
+	p := make([]string, 2)
+	p[pIndexRole] = role
+	p[pIndexAction] = action
+	return p
+}
+
 type rbacRepository struct {
 	db       database.Database
 	enforcer rbac.RBACEnforcer
@@ -18,7 +44,6 @@ func NewRBACRepository(db database.Database, enforcer rbac.RBACEnforcer) reposit
 	return &rbacRepository{db: db, enforcer: enforcer}
 }
 
-// EnforceForTargetAccount evaluates access permissions for a user on a specific target account.
 func (r *rbacRepository) EnforceForTargetAccount(userID string, targetAccountID string, action string) (bool, error) {
 	ok, err := r.enforcer.GetEnforcer().Enforce(userID, targetAccountID, action)
 	if err != nil {
@@ -27,89 +52,132 @@ func (r *rbacRepository) EnforceForTargetAccount(userID string, targetAccountID 
 	return ok, nil
 }
 
-// AddUserRoleForTargetAccount assigns a role to a user for a target account ('g' rule: subject, resource, role).
 func (r *rbacRepository) AddUserRoleForTargetAccount(userID string, targetAccountID string, role string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().AddGroupingPolicy(userID, targetAccountID, role)
+	policy := buildGPolicy(userID, targetAccountID, role)
+	ok, err := r.enforcer.GetEnforcer().AddGroupingPolicy(policy)
 	if err != nil {
 		return false, fmt.Errorf("casbin add grouping policy failed: %w", err)
 	}
 	return ok, nil
 }
 
-// RemoveUserRoleForTargetAccount revokes a role from a user for a target account ('g' rule: subject, resource, role).
 func (r *rbacRepository) RemoveUserRoleForTargetAccount(userID string, targetAccountID string, role string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().RemoveGroupingPolicy(userID, targetAccountID, role)
+	policy := buildGPolicy(userID, targetAccountID, role)
+	ok, err := r.enforcer.GetEnforcer().RemoveGroupingPolicy(policy)
 	if err != nil {
 		return false, fmt.Errorf("casbin remove grouping policy failed: %w", err)
 	}
 	return ok, nil
 }
 
-// GetUserRolesForTargetAccount retrieves all roles of a user on a specific target account.
-func (r *rbacRepository) GetUserRolesForTargetAccount(userID string, targetAccountID string) ([]string, error) {
-	roles := r.enforcer.GetEnforcer().GetRolesForUserInDomain(userID, targetAccountID)
-
-	return roles, nil
-}
-
-// GetUsersForTargetAccount retrieves all user-role assignments for a target account.
-func (r *rbacRepository) GetUsersForTargetAccount(targetAccountID string) ([][]string, error) {
-	policies, err := r.enforcer.GetEnforcer().GetFilteredGroupingPolicy(2, targetAccountID)
+// GetUserRolesForTargetAccount retrieves all user-role DTOs for a specific target account.
+func (r *rbacRepository) GetUserRolesForTargetAccount(userID string, targetAccountID string) ([]repository_contract.UserAccountRoleDTO, error) {
+	policies, err := r.enforcer.GetEnforcer().GetFilteredGroupingPolicy(gIndexUserID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("casbin get filtered grouping policy failed: %w", err)
 	}
-	return policies, nil
+
+	dtos := make([]repository_contract.UserAccountRoleDTO, 0, len(policies))
+	for _, policy := range policies {
+		if len(policy) > gIndexRole && len(policy) > gIndexTargetAccountID {
+			if policy[gIndexTargetAccountID] == targetAccountID {
+				dtos = append(dtos, repository_contract.UserAccountRoleDTO{
+					UserID:          policy[gIndexUserID],
+					TargetAccountID: policy[gIndexTargetAccountID],
+					Role:            policy[gIndexRole],
+				})
+			}
+		}
+	}
+	return dtos, nil
 }
 
-// RemoveAllRolesForTargetAccount purges all role assignments for a deleted target account.
+func (r *rbacRepository) GetUsersForTargetAccount(targetAccountID string) ([]repository_contract.UserAccountRoleDTO, error) {
+	policies, err := r.enforcer.GetEnforcer().GetFilteredGroupingPolicy(gIndexTargetAccountID, targetAccountID)
+	if err != nil {
+		return nil, fmt.Errorf("casbin get filtered grouping policy failed: %w", err)
+	}
+
+	dtos := make([]repository_contract.UserAccountRoleDTO, 0, len(policies))
+	for _, policy := range policies {
+		if len(policy) > gIndexRole {
+			dtos = append(dtos, repository_contract.UserAccountRoleDTO{
+				UserID:          policy[gIndexUserID],
+				TargetAccountID: policy[gIndexTargetAccountID],
+				Role:            policy[gIndexRole],
+			})
+		}
+	}
+	return dtos, nil
+}
+
 func (r *rbacRepository) RemoveAllRolesForTargetAccount(targetAccountID string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().RemoveFilteredGroupingPolicy(2, targetAccountID)
+	ok, err := r.enforcer.GetEnforcer().RemoveFilteredGroupingPolicy(gIndexTargetAccountID, targetAccountID)
 	if err != nil {
 		return false, fmt.Errorf("casbin remove filtered grouping policy for target failed: %w", err)
 	}
 	return ok, nil
 }
 
-// RemoveAllRolesForUser purges all role assignments associated with a user.
 func (r *rbacRepository) RemoveAllRolesForUser(userID string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().RemoveFilteredGroupingPolicy(0, userID)
+	ok, err := r.enforcer.GetEnforcer().RemoveFilteredGroupingPolicy(gIndexUserID, userID)
 	if err != nil {
 		return false, fmt.Errorf("casbin remove filtered grouping policy for user failed: %w", err)
 	}
 	return ok, nil
 }
 
-// AddPermissionForRole dynamically grants an action permission to a role ('p' rule).
 func (r *rbacRepository) AddPermissionForRole(role string, action string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().AddPolicy(role, action)
+	policy := buildPPolicy(role, action)
+	ok, err := r.enforcer.GetEnforcer().AddPolicy(policy)
 	if err != nil {
 		return false, fmt.Errorf("casbin add policy failed: %w", err)
 	}
 	return ok, nil
 }
 
-// RemovePermissionForRole dynamically revokes an action permission from a role.
 func (r *rbacRepository) RemovePermissionForRole(role string, action string) (bool, error) {
-	ok, err := r.enforcer.GetEnforcer().RemovePolicy(role, action)
+	policy := buildPPolicy(role, action)
+	ok, err := r.enforcer.GetEnforcer().RemovePolicy(policy)
 	if err != nil {
 		return false, fmt.Errorf("casbin remove policy failed: %w", err)
 	}
 	return ok, nil
 }
 
-// GetPermissionsForRole retrieves all assigned action permissions for a specific role.
-func (r *rbacRepository) GetPermissionsForRole(role string) ([][]string, error) {
-	policies, err := r.enforcer.GetEnforcer().GetFilteredPolicy(0, role)
+func (r *rbacRepository) GetPermissionsForRole(role string) ([]repository_contract.RolePermissionDTO, error) {
+	policies, err := r.enforcer.GetEnforcer().GetFilteredPolicy(pIndexRole, role)
 	if err != nil {
 		return nil, fmt.Errorf("casbin get filtered policy failed: %w", err)
 	}
-	return policies, nil
+
+	dtos := make([]repository_contract.RolePermissionDTO, 0, len(policies))
+	for _, policy := range policies {
+		if len(policy) > pIndexAction {
+			dtos = append(dtos, repository_contract.RolePermissionDTO{
+				Role:   policy[pIndexRole],
+				Action: policy[pIndexAction],
+			})
+		}
+	}
+	return dtos, nil
 }
 
-func (r *rbacRepository) GetTargetAccountsForUser(ctx context.Context, userID string) ([][]string, error) {
-	roles, err := r.enforcer.GetEnforcer().GetFilteredGroupingPolicy(0, userID)
+func (r *rbacRepository) GetTargetAccountsForUser(ctx context.Context, userID string) ([]repository_contract.UserAccountRoleDTO, error) {
+	policies, err := r.enforcer.GetEnforcer().GetFilteredGroupingPolicy(gIndexUserID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("casbin get filtered policy failed: %w", err)
+		return nil, fmt.Errorf("casbin get filtered grouping policy failed: %w", err)
 	}
-	return roles, nil
+
+	dtos := make([]repository_contract.UserAccountRoleDTO, 0, len(policies))
+	for _, policy := range policies {
+		if len(policy) > gIndexRole {
+			dtos = append(dtos, repository_contract.UserAccountRoleDTO{
+				UserID:          policy[gIndexUserID],
+				TargetAccountID: policy[gIndexTargetAccountID],
+				Role:            policy[gIndexRole],
+			})
+		}
+	}
+	return dtos, nil
 }

@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/MatinHAB05/2pi/config"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
 
-func Recovery(applogger logger.Logger) MiddlewareFunction {
+func Recovery(debugModeOptions *config.DebugModeOptions, applogger logger.Logger) MiddlewareFunction {
 	return func(next bot.HandlerFunc) bot.HandlerFunc {
 		return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			defer func() {
+				if debugModeOptions.Flag {
+					return
+				}
 				if rec := recover(); rec != nil {
 					stackTrace := string(debug.Stack())
 

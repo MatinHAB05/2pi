@@ -18,8 +18,8 @@ func OnboardingInlineKeyboard() *models.InlineKeyboardMarkup {
 	}
 }
 
-// ActiveAccountInlineKeyboard renders context actions based on RBAC role
-func ActiveAccountInlineKeyboard(role string, enabled bool) *models.InlineKeyboardMarkup {
+// CurrentAccountInlineKeyboard renders context actions based on RBAC role
+func CurrentAccountInlineKeyboard(role string, enabled bool) *models.InlineKeyboardMarkup {
 	statusText := "⚡ Enable Account"
 	if enabled {
 		statusText = "⚡ Disable Account"
@@ -59,19 +59,19 @@ func CancelEditInlineKeyboard() *models.InlineKeyboardMarkup {
 }
 
 // SwitchAccountInlineKeyboard dynamically lists target accounts user has access to
-func SwitchAccountInlineKeyboard(accounts []AccountItem, activeID int64) *models.InlineKeyboardMarkup {
+func SwitchAccountInlineKeyboard(accounts []*AccountItem, currentID int64) *models.InlineKeyboardMarkup {
 	var rows [][]models.InlineKeyboardButton
 
-	for _, acc := range accounts {
+	for i := range accounts {
 		prefix := "⚪"
 		suffix := ""
-		if acc.ID == activeID {
+		if accounts[i].ID == currentID {
 			prefix = "🟢"
-			suffix = " [ACTIVE]"
+			suffix = " [CURRENT]"
 		}
-		label := fmt.Sprintf("%s (%s)%s", prefix, acc.Role, suffix)
+		label := fmt.Sprintf("\u200E %s %s (%s)%s", prefix, accounts[i].Description, accounts[i].Role, suffix)
 		rows = append(rows, []models.InlineKeyboardButton{
-			{Text: label, CallbackData: "switch:select:" + strconv.FormatInt(acc.ID, 10)},
+			{Text: label, CallbackData: "acc:switch:select:handler:" + strconv.FormatInt(accounts[i].ID, 10)},
 		})
 	}
 
@@ -111,7 +111,7 @@ func ShareAccessInlineKeyboard() *models.InlineKeyboardMarkup {
 				{Text: "🫂 Confirm Invite", CallbackData: "acc:share:handler:confirm-invite"},
 			},
 			{
-				{Text: "📋 List Active Collaborators", CallbackData: "acc:share:handler:list"},
+				{Text: "📋 List Current Collaborators", CallbackData: "acc:share:handler:list"},
 			},
 			{
 				{Text: "🔙 Back to Dashboard", CallbackData: "acc:share:handler:dashboard"},

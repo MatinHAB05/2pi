@@ -11,7 +11,7 @@ type UserAccountCache struct {
 }
 
 type UserAccountCacheService interface {
-	GetOrSyncUserAccount(
+	GetOrSetGetDefaultAccount(
 		ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
@@ -19,13 +19,21 @@ type UserAccountCacheService interface {
 		ttl time.Duration,
 	) (*UserAccountCache, error)
 
-	SyncUserAccount(
+	SetGetDefaultAccountIfMiss(
 		ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
 		reqAccountID string,
 		ttl time.Duration,
 	) (*UserAccountCache, error)
+
+	Set(
+		ctx context.Context,
+		tokenContext TokenContext,
+		userID int64,
+		accountID int64,
+		ttl time.Duration,
+	) error
 
 	InvalidateCache(
 		ctx context.Context,

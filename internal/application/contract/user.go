@@ -10,6 +10,8 @@ type UserService interface {
 	Create(ctx context.Context, tokenContext TokenContext, req CreateUserRequest) (*UserResponse, error)
 	GetByID(ctx context.Context, tokenContext TokenContext, id int64) (*UserResponse, error)
 	GetWithTargetAccounts(ctx context.Context, tokenContext TokenContext, id int64) (*UserResponse, error)
+	GetByIDs(ctx context.Context, tokenContext TokenContext, id []int64) ([]*UserResponse, error)
+	GetByIDsWithTargetAccounts(ctx context.Context, tokenContext TokenContext, id []int64) ([]*UserResponse, error)
 	Update(ctx context.Context, tokenContext TokenContext, req UpdateUserRequest) (*UserResponse, error)
 	Delete(ctx context.Context, tokenContext TokenContext, id int64) error
 	Exists(ctx context.Context, tokenContext TokenContext, id int64) (bool, error)
@@ -25,14 +27,14 @@ type UpdateUserRequest struct {
 }
 
 type UserResponse struct {
-	ID             int64                   `json:"id"`
-	Lang           entity.Lang             `json:"lang"`
-	TargetAccounts []TargetAccountResponse `json:"target_accounts,omitempty"`
+	ID             int64                    `json:"id"`
+	Lang           entity.Lang              `json:"lang"`
+	TargetAccounts []*TargetAccountResponse `json:"target_accounts,omitempty"`
 }
 
 func ToUserResponse(u *entity.User) *UserResponse {
 	if u == nil {
-		return nil
+		return &UserResponse{}
 	}
 	res := &UserResponse{
 		ID:   int64(u.ID),
@@ -44,14 +46,15 @@ func ToUserResponse(u *entity.User) *UserResponse {
 	return res
 }
 
-func ToUserSliceResponse(users []entity.User) []UserResponse {
+func ToUserSliceResponse(users []entity.User) []*UserResponse {
+	res := make([]*UserResponse, len(users))
+
 	if len(users) == 0 {
-		return nil
+		return res
 	}
-	res := make([]UserResponse, len(users))
 	for i := range users {
 		if u := ToUserResponse(&users[i]); u != nil {
-			res[i] = *u
+			res[i] = u
 		}
 	}
 	return res

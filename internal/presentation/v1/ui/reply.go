@@ -7,12 +7,12 @@ func MainMenuReplyKeyboard() *models.ReplyKeyboardMarkup {
 	return &models.ReplyKeyboardMarkup{
 		Keyboard: [][]models.KeyboardButton{
 			{
-				{Text: "📊 Active Account"},
-				{Text: "🔄 Switch Account"},
+				{Text: "📊 Current Account"},
+				{Text: "🔄 Switch Account", Style: "danger"},
 			},
 			{
-				{Text: "⚙️ Edit Account"},
-				{Text: "👥 Share & Access"},
+				{Text: "⚙️ Edit Account", Style: "success"},
+				{Text: "👥 Share & Access", Style: "primary"},
 			},
 			{
 				{Text: "ℹ️ Help / Info"},

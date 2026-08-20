@@ -1,5 +1,12 @@
 package handler
 
+import (
+	"fmt"
+	"strings"
+
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
+)
+
 const (
 	// Callback Prefixes & States
 	AccountFieldHandlerPrefix = "acc:edit:fields:field:handler:"
@@ -10,6 +17,9 @@ const (
 	ShareAccountHandlerPrefix               = "acc:share:handler:"
 	InviteAccountHandlerPrefix              = "acc:share:invite:handler:role:"
 	StateConfirmShareAccountAccessCodeEnter = "acc:confirm:share:enter"
+
+	SwitchCurrentAccountHandlerPrefix = "acc:switch:select:handler:"
+
 	// State Keys
 	StateKeyStatus = "state"
 	StateKeyAccID  = "acc_id"
@@ -61,3 +71,21 @@ const (
 	MsgErrInvalidPeriod       = "❌ Invalid period value. Please enter a valid number."
 	MsgErrUpdateAccountFailed = "❌ Failed to update account settings. Please try again later."
 )
+
+func WhoCanAccessToThisAccountMsg(users []*service_contract.UserResponse) string {
+	if len(users) == 0 {
+		return "No users have access to this account."
+	}
+
+	var sb strings.Builder
+	sb.WriteString("Users with access to this account:\n")
+
+	for _, user := range users {
+		if user == nil {
+			continue
+		}
+		sb.WriteString(fmt.Sprintf("• User ID: %d\n", user.ID))
+	}
+
+	return sb.String()
+}

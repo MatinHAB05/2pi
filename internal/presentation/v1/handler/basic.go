@@ -85,7 +85,6 @@ func (h *BasicHandler) Start(ctx context.Context, b *bot.Bot, update *models.Upd
 	h.logger.Info(logger.Handler, logger.Telegram, "registered new user via start command", map[logger.ExtraKey]interface{}{
 		logger.UserID: authToken.UserId,
 	})
-
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
 		Text:        MsgWelcome,

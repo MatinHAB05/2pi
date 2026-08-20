@@ -28,7 +28,7 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 			}
 
 			// TODO : configurable ttl
-			account, err := userAccCache.GetOrSyncUserAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, "NO MATTER", time.Hour)
+			account, err := userAccCache.GetOrSetGetDefaultAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, "NO MATTER", time.Hour)
 			if err != nil {
 				applogger.Warn(logger.General, logger.Startup, "failed to get user-account from redis", map[logger.ExtraKey]interface{}{
 					logger.ErrorMessage: err.Error(),

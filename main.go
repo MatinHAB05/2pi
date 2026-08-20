@@ -38,24 +38,24 @@ func main() {
 	defer cancel()
 
 	// --- LOAD CONFIG & CONST ---
-	config := config.Load()
-	fmt.Println(config.String())
+	cfg := config.Load()
+	fmt.Println(cfg.String())
 
 	// --- LOGGER INITIALIZATION ---
 	telLogger, closeLF := tellogger.NewLogger(false)
 	defer closeLF()
 
 	appLogger := logger.NewLogger(logger.Config{
-		Logger:   config.Environment.Logger.Logger,
-		FilePath: config.Environment.Logger.FilePath,
-		Encoding: config.Environment.Logger.Encoding,
-		Level:    config.Environment.Logger.Level,
+		Logger:   cfg.Environment.Logger.Logger,
+		FilePath: cfg.Environment.Logger.FilePath,
+		Encoding: cfg.Environment.Logger.Encoding,
+		Level:    cfg.Environment.Logger.Level,
 	})
 	appLogger.Info(logger.General, logger.Startup, "starting application bootstrapping", nil)
 
 	// --- DATABASES CONNECTIONS ---
-	pgDB := database.NewPostgresDatabase(&config.Environment.DataBase, &config.Constant.Database)
-	redisClient := database.NewRedisDatabase(&config.Environment.Redis, &config.Constant.Redis)
+	pgDB := database.NewPostgresDatabase(&cfg.Environment.DataBase, &cfg.Constant.Database)
+	redisClient := database.NewRedisDatabase(&cfg.Environment.Redis, &cfg.Constant.Redis)
 
 	// --- STATICS ---
 	// statics, err := static.InitStaticFiles()
@@ -67,14 +67,14 @@ func main() {
 
 	// --- EMAIL SENDER ---
 	// emailSender := mail.NewMailer(mail.EmailConfig{
-	// 	From:     config.Environment.Email.TwoPiEmail,
-	// 	Password: config.Environment.Email.TwoPiEmailAppPassword,
-	// 	SMTPHost: config.Environment.Email.SMTPHost,
-	// 	SMTPPort: config.Environment.Email.SMTPPort,
+	// 	From:     cfg.Environment.Email.TwoPiEmail,
+	// 	Password: cfg.Environment.Email.TwoPiEmailAppPassword,
+	// 	SMTPHost: cfg.Environment.Email.SMTPHost,
+	// 	SMTPPort: cfg.Environment.Email.SMTPPort,
 	// })
 
 	// casbin
-	rbacEnf := rbac.NewCasbin(&config.Environment.Casbin, pgDB)
+	rbacEnf := rbac.NewCasbin(&cfg.Environment.Casbin, pgDB)
 
 	// repos
 	userRepo := repository.NewUserRepository(pgDB)
@@ -98,7 +98,7 @@ func main() {
 	userSrv := service.NewUserService(userRepo, appLogger, userinfoSrv)
 	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
 	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
-	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger)
+	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger, rbacSrv)
 	shareaccountSrv := service.NewShareAccountOTPService(shareccountRepo, appLogger)
 	ss := router.Services{
 		UserAccountCache: useraccountSrv,
@@ -107,7 +107,7 @@ func main() {
 
 	// register handlers
 	commonHandler := common.NewCommonHandler(appLogger)
-	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler)
+	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, rbacSrv, useraccountSrv, appLogger, &commonHandler)
 	rbacHandler := handler.NewRBACHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler, randomSrv, shareaccountSrv)
 	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &rbacHandler, &commonHandler, appLogger)
 	userHandler := handler.NewUserHandler(userSrv, appLogger, &commonHandler)
@@ -121,7 +121,7 @@ func main() {
 
 	// register middlewares
 	loggerMid := middleware.Logger(appLogger)
-	recoveryMid := middleware.Recovery(appLogger)
+	recoveryMid := middleware.Recovery(&cfg.Environment.DebugModeOptions, appLogger)
 	authMid := middleware.Authentication(useraccountSrv, appLogger)
 	clearstateMid := middleware.ClearUserState(&commonHandler, appLogger)
 	infoMid := middleware.Info(userinfoSrv, &commonHandler, appLogger)
@@ -142,11 +142,11 @@ func main() {
 			bot.Middleware(recoveryMid),
 		),
 	}
-	if config.Environment.DebugModeOptions.Flag {
+	if cfg.Environment.DebugModeOptions.Flag {
 		opts = append(opts, bot.WithDebug())
 	}
 
-	b, err := bot.New(config.Environment.BotToken.Token, opts...)
+	b, err := bot.New(cfg.Environment.BotToken.Token, opts...)
 	if err != nil {
 		log.Fatalf("ERR: Failed to create bot instance: %v", err)
 	}
@@ -160,8 +160,8 @@ func main() {
 		Commands: []models.BotCommand{
 			{Command: "start", Description: "Start bot / Main menu"},
 			{Command: "help", Description: "How to use bot"},
-			{Command: "account", Description: "View current active target account"},
-			{Command: "switch", Description: "Switch active target account"},
+			{Command: "account", Description: "View current current target account"},
+			{Command: "switch", Description: "Switch current target account"},
 			{Command: "share", Description: "Manage access & permissions"},
 			{Command: "settings", Description: "Edit target account details"},
 			{Command: "falang", Description: "Change Language To Farsi"},

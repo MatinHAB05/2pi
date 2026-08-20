@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/tokencontext"
@@ -23,6 +24,8 @@ type AccountHandler struct {
 	rbacService    service_contract.RBACService
 	commonHandler  *common.CommonHandler
 
+	useraccountService service_contract.UserAccountCacheService
+
 	logger logger.Logger
 }
 
@@ -30,16 +33,18 @@ func NewAccountHandler(
 	userService service_contract.UserService,
 	accountService service_contract.TargetAccountService,
 	rbacService service_contract.RBACService,
+	useraccountService service_contract.UserAccountCacheService,
 	logger logger.Logger,
 	commonHandler *common.CommonHandler,
 
 ) AccountHandler {
 	return AccountHandler{
-		userService:    userService,
-		accountService: accountService,
-		rbacService:    rbacService,
-		logger:         logger,
-		commonHandler:  commonHandler,
+		userService:        userService,
+		accountService:     accountService,
+		rbacService:        rbacService,
+		useraccountService: useraccountService,
+		logger:             logger,
+		commonHandler:      commonHandler,
 	}
 }
 
@@ -245,7 +250,7 @@ func (h *AccountHandler) handleEditAccountFieldState(ctx context.Context, b *bot
 
 }
 
-func (h *AccountHandler) ShowActiveAccount(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *AccountHandler) ShowCurrentAccount(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := helper.GetChatID(update)
 
 	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
@@ -275,14 +280,14 @@ func (h *AccountHandler) ShowActiveAccount(ctx context.Context, b *bot.Bot, upda
 	})
 }
 
-func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *AccountHandler) SwitchCurrentAccount(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := helper.GetChatID(update)
 
 	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
 	if !ok {
 		return
 	}
-
+	// #########
 	// user, err := h.userService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), authToken.UserId)
 	// if err != nil {
 	// 	h.logger.Error(logger.Handler, logger.Telegram, "failed to get user by id", map[logger.ExtraKey]interface{}{
@@ -291,7 +296,7 @@ func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, up
 	// 	return
 	// }
 
-	accesAccounts, err := h.rbacService.GetTargetAccountsForUser(ctx, service_contract.MapTokenContextToService(nil), strconv.FormatInt(authToken.UserId, 10))
+	dtos, err := h.rbacService.GetTargetAccountsForUser(ctx, service_contract.MapTokenContextToService(nil), authToken.UserId)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get accounts for specif user", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
@@ -300,13 +305,72 @@ func (h *AccountHandler) SwitchActiveAccount(ctx context.Context, b *bot.Bot, up
 		return
 	}
 
-	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   MsgSwitchAccount + fmt.Sprintf(":\n%+v", accesAccounts),
-		// ReplyMarkup: ui.SwitchAccountInlineKeyboard([]ui.AccountItem{{ID: 123, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: true}, {ID: *authToken.AccountID, Role: "testRole", DayDuration: 1111, Period: 12, Description: "......", Enable: false}}, *authToken.AccountID),
-	})
+	ids := service_contract.ExtractAccountIDs(dtos)
+	accounts, err := h.accountService.GetByIDs(ctx, service_contract.MapTokenContextToService(nil), ids)
 	if err != nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to send switch active account message", map[logger.ExtraKey]interface{}{
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get accounts by ids", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage:          err.Error(),
+			logger.TargetAccountID + "s": ids,
+		})
+		return
+	}
+
+	items := ui.MapTargetAccountsToAccountItems(accounts)
+
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatID,
+		Text:        MsgSwitchAccount + ":",
+		ReplyMarkup: ui.SwitchAccountInlineKeyboard(items, *authToken.AccountID),
+	})
+
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send switch current account message", map[logger.ExtraKey]interface{}{
+			logger.UserID:       authToken.UserId,
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
+}
+
+func (h *AccountHandler) SwitchCurrentAccountHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	chatID := helper.GetChatID(update)
+	// messageID := helper.GetMessageID(update)
+
+	authToken, ok := h.commonHandler.GetAuthTokenWithAccount(ctx)
+	if !ok {
+		return
+	}
+
+	log.Println(update.CallbackQuery.Data)
+	strReqAccountID := strings.TrimPrefix(update.CallbackQuery.Data, SwitchCurrentAccountHandlerPrefix)
+	reqAccountID, err := strconv.ParseInt(strReqAccountID, 10, 64)
+	if err != nil {
+		h.logger.Error(logger.Service, logger.CacheService, "failed to parse req_account_id from query data", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage:    err.Error(),
+			logger.TargetAccountID: strReqAccountID,
+		})
+		return
+	}
+
+	//TODO : ttl
+	err = h.useraccountService.Set(ctx, service_contract.MapTokenContextToService(nil), authToken.UserId, reqAccountID, time.Hour)
+	if err != nil {
+		h.logger.Error(logger.Service, logger.CacheService, "failed to switch/set current account", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage:    err.Error(),
+			logger.TargetAccountID: reqAccountID,
+			logger.UserID:          authToken.UserId,
+		})
+		return
+	}
+
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatID,
+		Text:        MsgSuccessDone + "\nuser-id : " + strconv.FormatInt(authToken.UserId, 10) + "\naccount-id : " + strconv.FormatInt(reqAccountID, 10),
+		ReplyMarkup: ui.MainMenuReplyKeyboard(),
+	})
+
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send success switch current account message", map[logger.ExtraKey]interface{}{
 			logger.UserID:       authToken.UserId,
 			logger.ErrorMessage: err.Error(),
 		})

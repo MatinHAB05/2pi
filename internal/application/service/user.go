@@ -19,7 +19,7 @@ func NewUserService(
 	repo repository_contract.UserRepository,
 	log logger.Logger,
 	userInfoCacheService service_contract.UserInfoCacheService,
-) *userService {
+) service_contract.UserService {
 	return &userService{
 		repo:                 repo,
 		logger:               log,
@@ -71,6 +71,32 @@ func (s *userService) GetWithTargetAccounts(ctx context.Context, tokenContext se
 	}
 
 	return service_contract.ToUserResponse(u), nil
+}
+
+func (s *userService) GetByIDs(ctx context.Context, tokenContext service_contract.TokenContext, ids []int64) ([]*service_contract.UserResponse, error) {
+	us, err := s.repo.GetByIDs(ctx, ids)
+	if err != nil {
+		s.logger.Error(logger.Service, logger.UserService, "failed to get user by id", map[logger.ExtraKey]interface{}{
+			logger.UserID+"s":       ids,
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, err
+	}
+
+	return service_contract.ToUserSliceResponse(us), nil
+}
+
+func (s *userService) GetByIDsWithTargetAccounts(ctx context.Context, tokenContext service_contract.TokenContext, ids []int64) ([]*service_contract.UserResponse, error) {
+	us, err := s.repo.GetByIDsWithTargetAccounts(ctx, ids)
+	if err != nil {
+		s.logger.Error(logger.Service, logger.UserService, "failed to get user with target accounts", map[logger.ExtraKey]interface{}{
+			logger.UserID + "s": ids,
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, err
+	}
+
+	return service_contract.ToUserSliceResponse(us), nil
 }
 
 func (s *userService) Update(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.UpdateUserRequest) (*service_contract.UserResponse, error) {

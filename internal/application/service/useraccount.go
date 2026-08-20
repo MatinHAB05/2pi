@@ -18,6 +18,7 @@ type userAccountCacheService struct {
 	cacheRepo   repository_contract.UserAccountCacheRepository
 	userRepo    repository_contract.UserRepository
 	accountRepo repository_contract.TargetAccountRepository
+	rbacService service_contract.RBACService
 	logger      logger.Logger
 }
 
@@ -26,16 +27,18 @@ func NewUserAccountCacheService(
 	userRepo repository_contract.UserRepository,
 	accountRepo repository_contract.TargetAccountRepository,
 	log logger.Logger,
+	rbacService service_contract.RBACService,
 ) service_contract.UserAccountCacheService {
 	return &userAccountCacheService{
 		cacheRepo:   cacheRepo,
 		userRepo:    userRepo,
 		accountRepo: accountRepo,
 		logger:      log,
+		rbacService: rbacService,
 	}
 }
 
-func (s *userAccountCacheService) GetOrSyncUserAccount(
+func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	userID int64,
@@ -77,10 +80,10 @@ func (s *userAccountCacheService) GetOrSyncUserAccount(
 	}
 
 	// 2. Cache miss -> Sync logic
-	return s.SyncUserAccount(ctx, tokenContext, userID, reqAccountID, ttl)
+	return s.SetGetDefaultAccountIfMiss(ctx, tokenContext, userID, reqAccountID, ttl)
 }
 
-func (s *userAccountCacheService) SyncUserAccount(
+func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	userID int64,
@@ -124,6 +127,11 @@ func (s *userAccountCacheService) SyncUserAccount(
 
 		reqAccountID = strconv.FormatInt(newAcc.ID, 10)
 		user.TargetAccounts = []entity.TargetAccount{*newAcc}
+
+		_, err := s.rbacService.AddUserRoleForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), userID, newAcc.ID, string(entity.RoleOwner))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if user != nil {
@@ -175,6 +183,29 @@ func (s *userAccountCacheService) InvalidateCache(ctx context.Context, tokenCont
 	userIDStr := strconv.FormatInt(userID, 10)
 
 	if err := s.cacheRepo.Delete(ctx, userIDStr); err != nil {
+		s.logger.Error(logger.Service, logger.CacheService, "failed to invalidate user account cache", map[logger.ExtraKey]interface{}{
+			logger.UserID:       userID,
+			logger.ErrorMessage: err.Error(),
+		})
+		return err
+	}
+	return nil
+}
+
+func (s *userAccountCacheService) Set(ctx context.Context, tokenContext service_contract.TokenContext, userID int64, accountID int64, ttl time.Duration) error {
+	userIDStr := strconv.FormatInt(userID, 10)
+
+	acc, err := s.accountRepo.GetByID(ctx, accountID)
+	if err != nil {
+		return err
+	}
+
+	err = s.cacheRepo.Set(ctx, userIDStr, &repository_contract.UserAccountCache{
+		AccountID:      strconv.FormatInt(accountID, 10),
+		AccountOwnerID: strconv.FormatInt(acc.OwnerUserID, 10),
+	}, ttl)
+
+	if err != nil {
 		s.logger.Error(logger.Service, logger.CacheService, "failed to invalidate user account cache", map[logger.ExtraKey]interface{}{
 			logger.UserID:       userID,
 			logger.ErrorMessage: err.Error(),

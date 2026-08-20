@@ -16,4 +16,5 @@ type TargetAccountRepository interface {
 	CountByOwnerID(ctx context.Context, ownerUserID int64) (int64, error)
 	DeleteByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) error
 	GetByIDAndOwnerID(ctx context.Context, id int64, ownerUserID int64) (*entity.TargetAccount, error)
+	GetByIDs(ctx context.Context, ids []int64) ([]entity.TargetAccount, error)
 }

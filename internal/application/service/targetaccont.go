@@ -14,7 +14,7 @@ type targetAccountService struct {
 	logger logger.Logger
 }
 
-func NewTargetAccountService(repo repository_contract.TargetAccountRepository, log logger.Logger) *targetAccountService {
+func NewTargetAccountService(repo repository_contract.TargetAccountRepository, log logger.Logger) service_contract.TargetAccountService {
 	return &targetAccountService{
 		repo:   repo,
 		logger: log,
@@ -54,7 +54,7 @@ func (s *targetAccountService) GetByID(ctx context.Context, tokenContext service
 	return service_contract.ToTargetAccountResponse(target), nil
 }
 
-func (s *targetAccountService) GetByOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, ownerUserID int64, limit, offset int) ([]service_contract.TargetAccountResponse, error) {
+func (s *targetAccountService) GetByOwnerID(ctx context.Context, tokenContext service_contract.TokenContext, ownerUserID int64, limit, offset int) ([]*service_contract.TargetAccountResponse, error) {
 	accounts, err := s.repo.GetByOwnerID(ctx, ownerUserID, limit, offset)
 	if err != nil {
 		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target accounts by owner id", map[logger.ExtraKey]interface{}{
@@ -167,4 +167,20 @@ func (s *targetAccountService) GetByIDAndOwnerID(ctx context.Context, tokenConte
 	}
 
 	return service_contract.ToTargetAccountResponse(target), nil
+}
+
+func (s *targetAccountService) GetByIDs(ctx context.Context, tokenContext service_contract.TokenContext, ids []int64) ([]*service_contract.TargetAccountResponse, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	accounts, err := s.repo.GetByIDs(ctx, ids)
+	if err != nil {
+		s.logger.Error(logger.Service, logger.TargetAccountService, "failed to get target accounts by ids", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, err
+	}
+
+	return service_contract.ToTargetAccountSliceResponse(accounts), nil
 }

@@ -9,13 +9,14 @@ import (
 type TargetAccountService interface {
 	Create(ctx context.Context, tokenContext TokenContext, req CreateTargetAccountRequest) (*TargetAccountResponse, error)
 	GetByID(ctx context.Context, tokenContext TokenContext, id int64) (*TargetAccountResponse, error)
-	GetByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64, limit, offset int) ([]TargetAccountResponse, error)
+	GetByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64, limit, offset int) ([]*TargetAccountResponse, error)
 	Update(ctx context.Context, tokenContext TokenContext, req UpdateTargetAccountRequest) (*TargetAccountResponse, error)
 	UpdateStatus(ctx context.Context, tokenContext TokenContext, id int64, status bool) error
 	Delete(ctx context.Context, tokenContext TokenContext, id int64) error
 	CountByOwnerID(ctx context.Context, tokenContext TokenContext, ownerUserID int64) (int64, error)
 	DeleteByIDAndOwnerID(ctx context.Context, tokenContext TokenContext, id int64, ownerUserID int64) error
 	GetByIDAndOwnerID(ctx context.Context, tokenContext TokenContext, id int64, ownerUserID int64) (*TargetAccountResponse, error)
+	GetByIDs(ctx context.Context, tokenContext TokenContext, ids []int64) ([]*TargetAccountResponse, error)
 }
 
 type CreateTargetAccountRequest struct {
@@ -42,7 +43,7 @@ type TargetAccountResponse struct {
 
 func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
 	if ta == nil {
-		return nil
+		return &TargetAccountResponse{}
 	}
 	return &TargetAccountResponse{
 		ID:          int64(ta.ID),
@@ -54,14 +55,15 @@ func ToTargetAccountResponse(ta *entity.TargetAccount) *TargetAccountResponse {
 	}
 }
 
-func ToTargetAccountSliceResponse(accounts []entity.TargetAccount) []TargetAccountResponse {
+func ToTargetAccountSliceResponse(accounts []entity.TargetAccount) []*TargetAccountResponse {
+	res := make([]*TargetAccountResponse, len(accounts))
+
 	if len(accounts) == 0 {
-		return nil
+		return res
 	}
-	res := make([]TargetAccountResponse, len(accounts))
 	for i := range accounts {
 		if ta := ToTargetAccountResponse(&accounts[i]); ta != nil {
-			res[i] = *ta
+			res[i] = ta
 		}
 	}
 	return res

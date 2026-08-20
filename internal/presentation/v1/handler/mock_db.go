@@ -11,18 +11,18 @@ import (
 // ============================================================================
 
 type MockDB struct {
-	mu            sync.RWMutex
-	knownUsers    map[int64]bool
-	activeContext map[int64]int64
-	userAccounts  map[int64]map[int64]*ui.AccountItem
-	invitations   map[string]Invitation
+	mu             sync.RWMutex
+	knownUsers     map[int64]bool
+	currentContext map[int64]int64
+	userAccounts   map[int64]map[int64]*ui.AccountItem
+	invitations    map[string]Invitation
 }
 
 var db = &MockDB{
-	knownUsers:    make(map[int64]bool),
-	activeContext: make(map[int64]int64),
-	userAccounts:  make(map[int64]map[int64]*ui.AccountItem),
-	invitations:   make(map[string]Invitation),
+	knownUsers:     make(map[int64]bool),
+	currentContext: make(map[int64]int64),
+	userAccounts:   make(map[int64]map[int64]*ui.AccountItem),
+	invitations:    make(map[string]Invitation),
 }
 
 // func initMockAccountsForUser(chatID int64) {
@@ -48,7 +48,7 @@ var db = &MockDB{
 // 			Enable:      true,
 // 		},
 // 	}
-// 	db.activeContext[chatID] = 101
+// 	db.currentContext[chatID] = 101
 // }
 
 // func checkUserIsNew(id int64) bool {
@@ -74,16 +74,16 @@ var db = &MockDB{
 // 			Enable:      false,
 // 		},
 // 	}
-// 	db.activeContext[id] = 201
+// 	db.currentContext[id] = 201
 // }
 
-// func getActiveAccountID(id int64) int64 {
+// func getCurrentAccountID(id int64) int64 {
 // 	db.mu.RLock()
 // 	defer db.mu.RUnlock()
-// 	return db.activeContext[id]
+// 	return db.currentContext[id]
 // }
 
-// func getActiveAccount(id int64) ui.AccountItem {
+// func getCurrentAccount(id int64) ui.AccountItem {
 // 	db.mu.Lock()
 // 	if _, exists := db.userAccounts[id]; !exists {
 // 		if db.knownUsers[id] {
@@ -99,8 +99,8 @@ var db = &MockDB{
 // 	db.mu.RLock()
 // 	defer db.mu.RUnlock()
 
-// 	activeID := db.activeContext[id]
-// 	if acc, exists := db.userAccounts[id][activeID]; exists {
+// 	currentID := db.currentContext[id]
+// 	if acc, exists := db.userAccounts[id][currentID]; exists {
 // 		return *acc
 // 	}
 
@@ -108,7 +108,7 @@ var db = &MockDB{
 // 		Username:    "unknown_account",
 // 		Role:        "owner",
 // 		UserLang:    "fa",
-// 		Description: "No active context found",
+// 		Description: "No current context found",
 // 	}
 // }
 
@@ -123,30 +123,30 @@ var db = &MockDB{
 // 	return list
 // }
 
-// func setActiveAccountContext(chatID int64, accIDStr string) {
+// func setCurrentAccountContext(chatID int64, accIDStr string) {
 // 	accID, err := strconv.ParseInt(accIDStr, 10, 64)
 // 	if err != nil {
 // 		return
 // 	}
 // 	db.mu.Lock()
 // 	defer db.mu.Unlock()
-// 	db.activeContext[chatID] = accID
+// 	db.currentContext[chatID] = accID
 // }
 
-// func clearActiveAccountContext(chatID int64) {
+// func clearCurrentAccountContext(chatID int64) {
 // 	db.mu.Lock()
 // 	defer db.mu.Unlock()
-// 	delete(db.activeContext, chatID)
+// 	delete(db.currentContext, chatID)
 // }
 
 // func generateInviteLink(chatID int64, role string) string {
 // 	db.mu.Lock()
 // 	defer db.mu.Unlock()
 
-// 	activeAcc := getActiveAccount(chatID)
-// 	token := fmt.Sprintf("tok_%d_%s", activeAcc.ID, role)
+// 	currentAcc := getCurrentAccount(chatID)
+// 	token := fmt.Sprintf("tok_%d_%s", currentAcc.ID, role)
 // 	db.invitations[token] = Invitation{
-// 		TargetUsername: activeAcc.Username,
+// 		TargetUsername: currentAcc.Username,
 // 		Role:           role,
 // 	}
 // 	return fmt.Sprintf("https://t.me/YourPeriodBot?start=invite_%s", token)
@@ -198,7 +198,7 @@ var db = &MockDB{
 
 // func formatStatus(enable bool) string {
 // 	if enable {
-// 		return "🟢 Active"
+// 		return "🟢 Current"
 // 	}
 // 	return "🔴 Disabled"
 // }

@@ -39,6 +39,7 @@ func NewRBACHandler(
 	commonHandler *common.CommonHandler,
 	randomService service_contract.RandomService,
 	shareaccountService service_contract.ShareAccountOTPService,
+
 ) RBACHandler {
 	return RBACHandler{
 		userService:         userService,
@@ -116,7 +117,7 @@ func (h *RBACHandler) shareAccountGetBackToDashboard(ctx context.Context, b *bot
 
 func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID int64, accountID int64) error {
 	strAccountID := strconv.FormatInt(accountID, 10)
-	res, err := h.rbacService.GetUsersForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), strAccountID)
+	usaccs, err := h.rbacService.GetUsersForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), accountID)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get users that have any access to a account ", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage:    err.Error(),
@@ -125,9 +126,20 @@ func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID i
 		return err
 	}
 
+	// #########
+	ids := service_contract.ExtractUserIDs(usaccs)
+	users, err := h.userService.GetByIDs(ctx, service_contract.MapTokenContextToService(nil), ids)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get users by ids", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+			logger.UserID + "s": ids,
+		})
+		return err
+	}
+
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   fmt.Sprint("Who can Use this account :\n%v", res),
+		Text:   WhoCanAccessToThisAccountMsg(users),
 	})
 
 	if err != nil {
@@ -214,9 +226,20 @@ func (h *RBACHandler) inviteAccountRole(ctx context.Context, b *bot.Bot, chatID 
 		BaseUserID:    authToken.UserId,
 	}, time.Hour)
 
+	//TODO : for now!!!!
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   role + ":" + code,
+		Text:   role,
+	})
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send invite account role message", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return err
+	}
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   code,
 	})
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send invite account role message", map[logger.ExtraKey]interface{}{
@@ -293,12 +316,12 @@ func (h *RBACHandler) handlerEnterConfirmShareAccessAccountCode(ctx context.Cont
 	}
 
 	// correct otp code
-	//TODO : replace int instead of str(rbac service must in int not string base on business logic)
-	ok, err := h.rbacService.AddUserRoleForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), strconv.FormatInt(sh.BaseUserID, 10), strconv.FormatInt(sh.BaseAccountID, 10), sh.Role)
-	if err != nil || !ok {
+	ok, err := h.rbacService.AddUserRoleForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), userID, sh.BaseAccountID, sh.Role)
+	log.Println(ok, err)
+	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to update account", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
-			"ok":                ok,
+			"ok":                strconv.FormatBool(ok),
 		})
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,

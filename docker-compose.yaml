@@ -13,7 +13,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - twopi_network
+      - 2pi_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PDB_USER} -d ${PDB_DB_NAME}"]
       interval: 5s
@@ -32,7 +32,7 @@ services:
     volumes:
       - redisdata:/data
     networks:
-      - twopi_network
+      - 2pi_network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${RDB_PASSWORD}", "ping"]
       interval: 5s
@@ -55,7 +55,7 @@ services:
   #   depends_on:
   #     - db
   #   networks:
-  #     - twopi_network
+  #     - 2pi_network
   #   env_file:
   #     - .env
 
@@ -65,5 +65,5 @@ volumes:
   # pgadmin_data:
 
 networks:
-  twopi_network:
+  2pi_network:
     driver: bridge

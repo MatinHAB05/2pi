@@ -45,6 +45,32 @@ func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id int64) (*
 	return &user, err
 }
 
+func (r *userRepository) GetByIDs(ctx context.Context, ids []int64) ([]entity.User, error) {
+	var users []entity.User
+	if len(ids) == 0 {
+		return users, nil
+	}
+
+	err := r.db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, err
+}
+
+func (r *userRepository) GetByIDsWithTargetAccounts(ctx context.Context, ids []int64) ([]entity.User, error) {
+	var users []entity.User
+	if len(ids) == 0 {
+		return users, nil
+	}
+
+	err := r.db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&users).Preload("TargetAccounts").Error
+	if err != nil {
+		return nil, err
+	}
+	return users, err
+}
+
 func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
 	return r.db.GetDB().WithContext(ctx).Where("id = ?", user.BaseEntity.ID).Updates(user).Error
 }

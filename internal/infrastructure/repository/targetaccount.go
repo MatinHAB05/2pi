@@ -102,3 +102,16 @@ func (r *targetAccountRepository) CountByOwnerID(ctx context.Context, ownerUserI
 		Error
 	return count, err
 }
+
+func (r *targetAccountRepository) GetByIDs(ctx context.Context, ids []int64) ([]entity.TargetAccount, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	var accounts []entity.TargetAccount
+	if err := r.db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&accounts).Error; err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}
