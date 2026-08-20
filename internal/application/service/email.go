@@ -15,14 +15,14 @@ import (
 
 type emailService struct {
 	sender          mail.Sender
-	debugModeConfig *config.DebugModeOptions
+	debugModeConfig *config.ModeOptions
 	statics         *static.StaticFiles
 	appLogger       logger.Logger
 }
 
 func NewEmailService(
 	sender mail.Sender,
-	debugModeConfig *config.DebugModeOptions,
+	debugModeConfig *config.ModeOptions,
 	statics *static.StaticFiles,
 	appLogger logger.Logger,
 ) service_contract.EmailService {
@@ -37,7 +37,7 @@ func NewEmailService(
 func (s *emailService) SendEmail(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.SendEmailRequest) (*bool, error) {
 	success := true
 
-	if s.debugModeConfig != nil && s.debugModeConfig.Flag {
+	if s.debugModeConfig != nil && s.debugModeConfig.DebugFlag {
 		debugText := fmt.Sprintf("[%s] To: %s | Subject: %s\nText: %s\n-------------------------------------------------------------------------------\n",
 			time.Now().Format(time.RFC3339), req.To, req.Subject, req.TextBody)
 

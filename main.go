@@ -50,7 +50,7 @@ func main() {
 		FilePath:  cfg.Environment.Logger.FilePath,
 		Encoding:  cfg.Environment.Logger.Encoding,
 		Level:     cfg.Environment.Logger.Level,
-		CleanMode: cfg.Environment.DebugModeOptions.Flag,
+		CleanMode: cfg.Environment.ModeOptions.DebugFlag,
 	})
 	appLogger.Info(logger.General, logger.Startup, "starting application bootstrapping", nil)
 
@@ -122,7 +122,7 @@ func main() {
 
 	// register middlewares
 	loggerMid := middleware.Logger(appLogger)
-	recoveryMid := middleware.Recovery(&cfg.Environment.DebugModeOptions, appLogger)
+	recoveryMid := middleware.Recovery(&cfg.Environment.ModeOptions, appLogger)
 	authMid := middleware.Authentication(useraccountSrv, appLogger)
 	clearstateMid := middleware.ClearUserState(&commonHandler, appLogger)
 	infoMid := middleware.Info(userinfoSrv, &commonHandler, appLogger)
@@ -143,7 +143,7 @@ func main() {
 			bot.Middleware(recoveryMid),
 		),
 	}
-	if cfg.Environment.DebugModeOptions.Flag {
+	if cfg.Environment.ModeOptions.DebugFlag {
 		opts = append(opts, bot.WithDebug())
 	}
 
@@ -169,6 +169,55 @@ func main() {
 			{Command: "englang", Description: "Change Language To English"},
 		},
 	})
+
+	b.SetMyName(ctx, &bot.SetMyNameParams{
+		Name:         "Mamad-Nabodi",
+		LanguageCode: "eng",
+	})
+	b.SetMyDescription(ctx, &bot.SetMyDescriptionParams{
+		Description:  "THIS IS DESCRIPTION!!!",
+		LanguageCode: "eng",
+	})
+	b.SetMyShortDescription(ctx, &bot.SetMyShortDescriptionParams{
+		ShortDescription: "THIS IS SHORT-DESCRIPTION!!!",
+		LanguageCode:     "eng",
+	})
+	b.SetMyName(ctx, &bot.SetMyNameParams{
+		Name:         "ممد بیوووو",
+		LanguageCode: "fa",
+	})
+	b.SetMyDescription(ctx, &bot.SetMyDescriptionParams{
+		Description:  "توضیحات اصلی به مولا",
+		LanguageCode: "fa",
+	})
+	b.SetMyShortDescription(ctx, &bot.SetMyShortDescriptionParams{
+		ShortDescription: "توضیحی که شورت است!",
+		LanguageCode:     "fa",
+	})
+	if cfg.Environment.ModeOptions.ProductionFlag {
+		// botProf, err := os.Open("bot-profile.jpg")
+		// if err != nil {
+		// 	appLogger.Fatalf("os cant read bot-profile.jpg file")
+		// }
+		// b.SetMyProfilePhoto(ctx, &bot.SetMyProfilePhotoParams{
+		// 	Photo: models.InputProfilePhotoStatic{
+		// 		Photo:           "attach://bot-ima-profile",
+		// 		MediaAttachment: botProf,
+		// 	},
+		// })
+
+		botProf, err := os.Open("bot-profile.gif")
+		if err != nil {
+			appLogger.Fatalf("os cant read bot-profile.gif file")
+		}
+		b.SetMyProfilePhoto(ctx, &bot.SetMyProfilePhotoParams{
+			Photo: models.InputProfilePhotoAnimated{
+				Animation:          "attach://bot-anim-profile",
+				MainFrameTimestamp: 0,
+				MediaAttachment:    botProf,
+			},
+		})
+	}
 
 	// start
 	fmt.Println("Bot is running...")

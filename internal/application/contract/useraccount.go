@@ -22,6 +22,7 @@ type UserAccountCacheService interface {
 		lastName string,
 		username string,
 		reqAccountID string,
+		lang string,
 		ttl time.Duration,
 	) (*UserAccountCache, error)
 
@@ -33,6 +34,7 @@ type UserAccountCacheService interface {
 		lastName string,
 		username string,
 		reqAccountID string,
+		lang string,
 		ttl time.Duration,
 	) (*UserAccountCache, error)
 

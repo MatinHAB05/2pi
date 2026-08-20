@@ -28,8 +28,9 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 				AccountOwnerID: nil,
 			}
 
+			lang := helper.MapLangCodeToUserLang(userDetails.LanguageCode)
 			// TODO : configurable ttl
-			account, err := userAccCache.GetOrSetGetDefaultAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, userDetails.FirstName, userDetails.LastName, userDetails.Username, "NO MATTER", time.Hour)
+			account, err := userAccCache.GetOrSetGetDefaultAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, userDetails.FirstName, userDetails.LastName, userDetails.Username, string(lang), "NO MATTER", time.Hour)
 			if err != nil {
 				applogger.Warn(logger.General, logger.Startup, "failed to get user-account from redis", map[logger.ExtraKey]interface{}{
 					logger.ErrorMessage: err.Error(),

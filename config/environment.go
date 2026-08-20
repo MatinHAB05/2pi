@@ -8,21 +8,22 @@ import (
 )
 
 type Environment struct {
-	BotToken         BotToken         `mapstructure:",squash"`
-	DebugModeOptions DebugModeOptions `mapstructure:",squash" json:"debug_mode_options"`
-	DataBase         DataBase         `mapstructure:",squash" json:"database"`
-	Redis            Redis            `mapstructure:",squash" json:"redis"`
-	Logger           LoggerConfig     `mapstructure:",squash" json:"logger"`
-	Casbin           Casbin           `mapstructure:",squash" json:"casbin"`
-	Email            EmailConfig      `mapstructure:",squash" json:"email"`
+	BotToken    BotToken     `mapstructure:",squash"`
+	ModeOptions ModeOptions  `mapstructure:",squash" json:"mode_options"`
+	DataBase    DataBase     `mapstructure:",squash" json:"database"`
+	Redis       Redis        `mapstructure:",squash" json:"redis"`
+	Logger      LoggerConfig `mapstructure:",squash" json:"logger"`
+	Casbin      Casbin       `mapstructure:",squash" json:"casbin"`
+	Email       EmailConfig  `mapstructure:",squash" json:"email"`
 }
 
 type BotToken struct {
 	Token string `mapstructure:"BOT_TOKEN" json:"bot_token"`
 }
 
-type DebugModeOptions struct {
-	Flag bool `mapstructure:"DEBUG_FLAG" json:"flag"`
+type ModeOptions struct {
+	DebugFlag      bool `mapstructure:"DEBUG_FLAG" json:"debug_flag"`
+	ProductionFlag bool `mapstructure:"PRODUCTION_FLAG" json:"production_flag"`
 }
 
 type DataBase struct {
@@ -91,7 +92,7 @@ func (c *Environment) String() string {
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("Config{BotToken:%+v, Debug:%+v, DataBase:%+v, Redis:%+v}",
-			c.BotToken, c.DebugModeOptions, c.DataBase, c.Redis)
+			c.BotToken, c.ModeOptions, c.DataBase, c.Redis)
 	}
 
 	return "Environment: " + string(data)

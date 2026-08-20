@@ -1,6 +1,9 @@
 package helper
 
-import "github.com/go-telegram/bot/models"
+import (
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
+	"github.com/go-telegram/bot/models"
+)
 
 func GetUserIDFromUpdate(update *models.Update) int64 {
 	if update == nil {
@@ -30,9 +33,10 @@ func GetUserIDFromUpdate(update *models.Update) int64 {
 }
 
 type UserInfo struct {
-	FirstName string
-	LastName  string
-	Username  string
+	FirstName    string
+	LastName     string
+	Username     string
+	LanguageCode string
 }
 
 func GetUserDetailsFromUpdate(update *models.Update) UserInfo {
@@ -66,8 +70,18 @@ func GetUserDetailsFromUpdate(update *models.Update) UserInfo {
 	}
 
 	return UserInfo{
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Username:  user.Username,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Username:     user.Username,
+		LanguageCode: user.LanguageCode,
+	}
+}
+
+func MapLangCodeToUserLang(langCode string) entity.Lang {
+	switch langCode {
+	case "fa":
+		return entity.LangFa
+	default: // "eng"
+		return entity.LangEng
 	}
 }

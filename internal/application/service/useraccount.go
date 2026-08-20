@@ -46,6 +46,7 @@ func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 	lastName string,
 	username string,
 	reqAccountID string,
+	lang string,
 	ttl time.Duration,
 ) (*service_contract.UserAccountCache, error) {
 	userIDStr := strconv.FormatInt(userID, 10)
@@ -84,7 +85,7 @@ func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 	}
 
 	// 2. Cache miss -> Sync logic
-	return s.SetGetDefaultAccountIfMiss(ctx, tokenContext, userID, firstName, lastName, username, reqAccountID, ttl)
+	return s.SetGetDefaultAccountIfMiss(ctx, tokenContext, userID, firstName, lastName, username, lang, reqAccountID, ttl)
 }
 
 func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
@@ -94,6 +95,7 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 	firstName string,
 	lastName string,
 	username string,
+	lang string,
 	reqAccountID string,
 	ttl time.Duration,
 ) (*service_contract.UserAccountCache, error) {
@@ -116,7 +118,7 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 			FirstName:  firstName,
 			LastName:   lastName,
 			Username:   username,
-			UserLang:   entity.LangFa,
+			UserLang:   entity.Lang(lang),
 		}
 		if err := s.userRepo.Create(ctx, user); err != nil {
 			s.logger.Error(logger.Service, logger.CacheService, "failed to create missing user", map[logger.ExtraKey]interface{}{

@@ -11,11 +11,11 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-func Recovery(debugModeOptions *config.DebugModeOptions, applogger logger.Logger) MiddlewareFunction {
+func Recovery(debugModeOptions *config.ModeOptions, applogger logger.Logger) MiddlewareFunction {
 	return func(next bot.HandlerFunc) bot.HandlerFunc {
 		return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			defer func() {
-				if debugModeOptions.Flag {
+				if debugModeOptions.DebugFlag {
 					return
 				}
 				if rec := recover(); rec != nil {
