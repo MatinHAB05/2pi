@@ -19,7 +19,11 @@ func MainMenuReplyKeyboard() *models.ReplyKeyboardMarkup {
 				{Text: "⚙️ Settings"},
 			},
 			{
+				{Text: "🥷 Update Info Auto"},
 				{Text: "🌐 Change Language"},
+			},
+			{
+				{Text: "💛 Support Us" /*, WebApp: &models.WebAppInfo{URL: "https://github.com/MatinHAB05/2pi"}*/},
 			},
 		},
 		ResizeKeyboard: true,

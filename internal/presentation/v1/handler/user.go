@@ -164,3 +164,39 @@ func (h *UserHandler) changeLanguageCancel(ctx context.Context, b *bot.Bot, chat
 	}
 	return nil
 }
+
+func (h *UserHandler) UpdateInfoAuto(ctx context.Context, b *bot.Bot, update *models.Update) {
+	chatID := helper.GetChatID(update)
+	authToken, ok := h.commonHandler.GetAuthToken(ctx)
+	if !ok {
+		return
+	}
+
+	userDetails := helper.GetUserDetailsFromUpdate(update)
+
+	u, err := h.userService.Update(ctx, service_contract.MapTokenContextToService(nil), service_contract.UpdateUserRequest{
+		ID:        authToken.UserId,
+		FirstName: userDetails.FirstName,
+		LastName:  userDetails.LastName,
+		Username:  userDetails.Username,
+	})
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to auto update user details", map[logger.ExtraKey]interface{}{
+			logger.UserID:       authToken.UserId,
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
+
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatID,
+		Text:        MsgSuccessDone + ":\n" + ShowUserInfo(u),
+		ReplyMarkup: ui.MainMenuReplyKeyboard(),
+	})
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to success auto-update user info message", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
+}

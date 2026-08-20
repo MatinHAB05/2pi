@@ -16,6 +16,7 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 	return func(next bot.HandlerFunc) bot.HandlerFunc {
 		return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			userID := helper.GetUserIDFromUpdate(update)
+			userDetails := helper.GetUserDetailsFromUpdate(update)
 			if userID == 0 {
 				applogger.Warn(logger.General, logger.Startup, "failed to extract user_id from update", nil)
 				return
@@ -28,7 +29,7 @@ func Authentication(userAccCache service_contract.UserAccountCacheService, applo
 			}
 
 			// TODO : configurable ttl
-			account, err := userAccCache.GetOrSetGetDefaultAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, "NO MATTER", time.Hour)
+			account, err := userAccCache.GetOrSetGetDefaultAccount(ctx, service_contract.MapTokenContextToServiceJustAuth(&token), userID, userDetails.FirstName, userDetails.LastName, userDetails.Username, "NO MATTER", time.Hour)
 			if err != nil {
 				applogger.Warn(logger.General, logger.Startup, "failed to get user-account from redis", map[logger.ExtraKey]interface{}{
 					logger.ErrorMessage: err.Error(),

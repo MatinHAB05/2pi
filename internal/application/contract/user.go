@@ -10,26 +10,47 @@ type UserService interface {
 	Create(ctx context.Context, tokenContext TokenContext, req CreateUserRequest) (*UserResponse, error)
 	GetByID(ctx context.Context, tokenContext TokenContext, id int64) (*UserResponse, error)
 	GetWithTargetAccounts(ctx context.Context, tokenContext TokenContext, id int64) (*UserResponse, error)
-	GetByIDs(ctx context.Context, tokenContext TokenContext, id []int64) ([]*UserResponse, error)
-	GetByIDsWithTargetAccounts(ctx context.Context, tokenContext TokenContext, id []int64) ([]*UserResponse, error)
+	GetByIDs(ctx context.Context, tokenContext TokenContext, ids []int64) ([]*UserResponse, error)
+	GetByIDsWithTargetAccounts(ctx context.Context, tokenContext TokenContext, ids []int64) ([]*UserResponse, error)
 	Update(ctx context.Context, tokenContext TokenContext, req UpdateUserRequest) (*UserResponse, error)
 	Delete(ctx context.Context, tokenContext TokenContext, id int64) error
 	Exists(ctx context.Context, tokenContext TokenContext, id int64) (bool, error)
+
+	GetUserAccountsRolesByID(ctx context.Context, tokenContext TokenContext, id int64) (*UserAccountsRoleResponse, error)
+	GetUserAccountsRolesByIDs(ctx context.Context, tokenContext TokenContext, ids []int64) ([]*UserAccountsRoleResponse, error)
 }
 
 type CreateUserRequest struct {
-	ID int64 `json:"id"`
+	ID        int64 `json:"id"`
+	FirstName string
+	LastName  string
+	Username  string
 }
 
 type UpdateUserRequest struct {
-	ID   int64       `json:"id"`
-	Lang entity.Lang `json:"lang"`
+	ID        int64       `json:"id"`
+	Lang      entity.Lang `json:"lang"`
+	FirstName string
+	LastName  string
+	Username  string
 }
 
 type UserResponse struct {
-	ID             int64                    `json:"id"`
-	Lang           entity.Lang              `json:"lang"`
+	ID             int64       `json:"id"`
+	Lang           entity.Lang `json:"lang"`
+	FirstName      string
+	LastName       string
+	Username       string
 	TargetAccounts []*TargetAccountResponse `json:"target_accounts,omitempty"`
+}
+type UserAccountsRoleResponse struct {
+	*UserResponse
+	AccountsRoles []*AccountsRoleResponse `json:",omitempty"`
+}
+
+type AccountsRoleResponse struct {
+	AccountID *TargetAccountResponse
+	Roles     []string
 }
 
 func ToUserResponse(u *entity.User) *UserResponse {
@@ -37,12 +58,16 @@ func ToUserResponse(u *entity.User) *UserResponse {
 		return &UserResponse{}
 	}
 	res := &UserResponse{
-		ID:   int64(u.ID),
-		Lang: u.UserLang,
+		ID:        int64(u.ID),
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Username:  u.Username,
+		Lang:      u.UserLang,
 	}
 	if len(u.TargetAccounts) > 0 {
 		res.TargetAccounts = ToTargetAccountSliceResponse(u.TargetAccounts)
 	}
+
 	return res
 }
 

@@ -128,7 +128,7 @@ func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID i
 
 	// #########
 	ids := service_contract.ExtractUserIDs(usaccs)
-	users, err := h.userService.GetByIDs(ctx, service_contract.MapTokenContextToService(nil), ids)
+	users, err := h.userService.GetUserAccountsRolesByIDs(ctx, service_contract.MapTokenContextToService(nil), ids)
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to get users by ids", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
@@ -140,6 +140,10 @@ func (h *RBACHandler) shareAccountList(ctx context.Context, b *bot.Bot, chatID i
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
 		Text:   WhoCanAccessToThisAccountMsg(users),
+	})
+
+	h.logger.Info("", "", "", map[logger.ExtraKey]interface{}{
+		"users": users,
 	})
 
 	if err != nil {

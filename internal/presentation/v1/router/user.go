@@ -7,6 +7,8 @@ import (
 )
 
 func UserRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repos, middlewares *Middlewares, applogger logger.Logger) *bot.Bot {
+	b.RegisterHandler(bot.HandlerTypeMessageText, "🥷 Update Info Auto", bot.MatchTypeExact, handlers.User.UpdateInfoAuto, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
+
 	b.RegisterHandler(bot.HandlerTypeMessageText, "🌐 Change Language", bot.MatchTypeExact, handlers.User.ChangeLanguageMenu, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "user:fields:field:language:", bot.MatchTypePrefix, handlers.User.ChangeLanguageHandler, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
 

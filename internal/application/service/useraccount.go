@@ -42,6 +42,9 @@ func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	userID int64,
+	firstName string,
+	lastName string,
+	username string,
 	reqAccountID string,
 	ttl time.Duration,
 ) (*service_contract.UserAccountCache, error) {
@@ -80,13 +83,16 @@ func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 	}
 
 	// 2. Cache miss -> Sync logic
-	return s.SetGetDefaultAccountIfMiss(ctx, tokenContext, userID, reqAccountID, ttl)
+	return s.SetGetDefaultAccountIfMiss(ctx, tokenContext, userID, firstName, lastName, username, reqAccountID, ttl)
 }
 
 func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	userID int64,
+	firstName string,
+	lastName string,
+	username string,
 	reqAccountID string,
 	ttl time.Duration,
 ) (*service_contract.UserAccountCache, error) {
@@ -103,8 +109,14 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 			return nil, err
 		}
 
-		// Fallback: Create user and default target account if missing
-		user = &entity.User{BaseEntity: entity.BaseEntity{ID: userID}, UserLang: entity.LangFa}
+		// Fallback: Create user with profile fields and default target account if missing
+		user = &entity.User{
+			BaseEntity: entity.BaseEntity{ID: userID},
+			FirstName:  firstName,
+			LastName:   lastName,
+			Username:   username,
+			UserLang:   entity.LangFa,
+		}
 		if err := s.userRepo.Create(ctx, user); err != nil {
 			s.logger.Error(logger.Service, logger.CacheService, "failed to create missing user", map[logger.ExtraKey]interface{}{
 				logger.UserID:       userID,

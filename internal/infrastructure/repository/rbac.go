@@ -181,3 +181,44 @@ func (r *rbacRepository) GetTargetAccountsForUser(ctx context.Context, userID st
 	}
 	return dtos, nil
 }
+
+//? bug that i fix it .
+// the fieldValues is not like IN operator instead it is used for multiple filter base on different fields(where field1==val1 && field2==val2 ...)
+//func (e *Enforcer) GetFilteredGroupingPolicy(fieldIndex int, fieldValues ...string) ([][]string, error) {
+
+func (r *rbacRepository) GetTargetAccountsForUsers(ctx context.Context, userIDs []string) ([]repository_contract.UserAccountRoleDTO, error) {
+	if len(userIDs) == 0 {
+		return nil, nil
+	}
+
+	// 1. Build a lookup set for fast IN filtering
+	userSet := make(map[string]struct{}, len(userIDs))
+	for _, id := range userIDs {
+		userSet[id] = struct{}{}
+	}
+
+	// 2. Fetch all grouping policies in a single call
+	policies, err := r.enforcer.GetEnforcer().GetGroupingPolicy()
+	if err != nil {
+		return nil, fmt.Errorf("casbin get grouping policy failed: %w", err)
+	}
+
+	// 3. Filter policies matching any ID in userSet
+	var dtos []repository_contract.UserAccountRoleDTO
+	for _, policy := range policies {
+		if len(policy) <= gIndexRole {
+			continue
+		}
+
+		userID := policy[gIndexUserID]
+		if _, exists := userSet[userID]; exists {
+			dtos = append(dtos, repository_contract.UserAccountRoleDTO{
+				UserID:          userID,
+				TargetAccountID: policy[gIndexTargetAccountID],
+				Role:            policy[gIndexRole],
+			})
+		}
+	}
+
+	return dtos, nil
+}

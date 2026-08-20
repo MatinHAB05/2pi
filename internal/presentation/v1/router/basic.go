@@ -14,5 +14,7 @@ func BasicRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repo
 	b.RegisterHandler(bot.HandlerTypeMessageText, "⚙️ Settings", bot.MatchTypeExact, handlers.Basic.Setting, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/settings", bot.MatchTypeExact, handlers.Basic.Setting, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
 
+	b.RegisterHandler(bot.HandlerTypeMessageText, "💛 Support Us", bot.MatchTypeExact, handlers.Basic.SupportUs, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
+
 	return b
 }

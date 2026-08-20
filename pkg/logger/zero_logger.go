@@ -1,12 +1,16 @@
 package logger
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )
@@ -25,6 +29,18 @@ var zeroLogLevelMapping = map[string]zerolog.Level{
 	"warn":  zerolog.WarnLevel,
 	"error": zerolog.ErrorLevel,
 	"fatal": zerolog.FatalLevel,
+}
+
+type indentedWriter struct {
+	out io.Writer
+}
+
+func (w indentedWriter) Write(p []byte) (n int, err error) {
+	var buf bytes.Buffer
+	if err := json.Indent(&buf, p, "", "  "); err == nil {
+		return w.out.Write(buf.Bytes())
+	}
+	return w.out.Write(p)
 }
 
 func newZeroLogger(cfg Config) *zeroLogger {
@@ -49,17 +65,30 @@ func (l *zeroLogger) Init() {
 		}
 
 		timeStamp := time.Now().In(loc).Format("2006-01-02-15-04-05")
-		fileName := fmt.Sprintf("%s%s-%s.log", l.cfg.FilePath, timeStamp, uuid.New().String())
 
-		file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-		if err != nil {
-			fmt.Printf("Error opening log file: %v\n", err)
-			panic("could not open log file")
+		writers := []io.Writer{os.Stdout}
+
+		if l.cfg.CleanMode {
+			fileName := fmt.Sprintf("%s%s-%s_clean.log", l.cfg.FilePath, timeStamp, uuid.New().String()[:4])
+			file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+			if err != nil {
+				fmt.Printf("Error opening log file: %v\n", err)
+				panic("could not open log file")
+			}
+			writers = append(writers, indentedWriter{out: file})
+		} else {
+			fileName := fmt.Sprintf("%s%s-%s.log", l.cfg.FilePath, timeStamp, uuid.New().String())
+			file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+			if err != nil {
+				fmt.Printf("Error opening log file: %v\n", err)
+				panic("could not open log file")
+			}
+			writers = append(writers, file)
 		}
 
 		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-		mw := zerolog.MultiLevelWriter(os.Stdout, file)
+		mw := zerolog.MultiLevelWriter(writers...)
 
 		var logger = zerolog.New(mw).
 			With().

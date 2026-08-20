@@ -7,6 +7,9 @@ CREATE TABLE users (
     id BIGINT PRIMARY KEY,
     user_lang lang NOT NULL DEFAULT 'fa',
     -- Telegram User ID 
+    first_name TEXT,
+    last_name TEXT,
+    username TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE

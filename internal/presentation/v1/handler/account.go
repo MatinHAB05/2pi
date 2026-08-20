@@ -276,7 +276,8 @@ func (h *AccountHandler) ShowCurrentAccount(ctx context.Context, b *bot.Bot, upd
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   fmt.Sprintf("user : %v\naccount:%v", user, acc),
+		Text:   ShowCurrentAccountInfo(user, acc),
+		// ParseMode: models.ParseModeMarkdown,
 	})
 }
 
@@ -287,30 +288,13 @@ func (h *AccountHandler) SwitchCurrentAccount(ctx context.Context, b *bot.Bot, u
 	if !ok {
 		return
 	}
-	// #########
-	// user, err := h.userService.GetByID(ctx, service_contract.MapTokenContextToServiceJustAuth(authToken), authToken.UserId)
-	// if err != nil {
-	// 	h.logger.Error(logger.Handler, logger.Telegram, "failed to get user by id", map[logger.ExtraKey]interface{}{
-	// 		logger.ErrorMessage: err.Error(),
-	// 	})
-	// 	return
-	// }
 
-	dtos, err := h.rbacService.GetTargetAccountsForUser(ctx, service_contract.MapTokenContextToService(nil), authToken.UserId)
+	// #########
+	accounts, err := h.userService.GetUserAccountsRolesByID(ctx, service_contract.MapTokenContextToService(nil), authToken.UserId)
 	if err != nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to get accounts for specif user", map[logger.ExtraKey]interface{}{
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to get accounts-roles for user", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
 			logger.UserID:       authToken.UserId,
-		})
-		return
-	}
-
-	ids := service_contract.ExtractAccountIDs(dtos)
-	accounts, err := h.accountService.GetByIDs(ctx, service_contract.MapTokenContextToService(nil), ids)
-	if err != nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to get accounts by ids", map[logger.ExtraKey]interface{}{
-			logger.ErrorMessage:          err.Error(),
-			logger.TargetAccountID + "s": ids,
 		})
 		return
 	}

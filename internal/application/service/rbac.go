@@ -126,7 +126,7 @@ func (s *rbacService) RemoveUserRoleForTargetAccount(ctx context.Context, tokenC
 	return removed, nil
 }
 
-func (s *rbacService) GetUserRolesForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, userID int64, targetAccountID int64) ([]*service_contract.UserAccountRoleResponse, error) {
+func (s *rbacService) GetUserRolesForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, userID int64, targetAccountID int64) ([]*service_contract.UserAccountRoleModelResponse, error) {
 	userIDStr := strconv.FormatInt(userID, 10)
 	targetAccountIDStr := strconv.FormatInt(targetAccountID, 10)
 
@@ -139,10 +139,10 @@ func (s *rbacService) GetUserRolesForTargetAccount(ctx context.Context, tokenCon
 		})
 		return nil, err
 	}
-	return service_contract.ToUserAccountRoleSliceResponse(roles), nil
+	return service_contract.ToUserAccountRoleSliceModelResponse(roles), nil
 }
 
-func (s *rbacService) GetUsersForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, targetAccountID int64) ([]*service_contract.UserAccountRoleResponse, error) {
+func (s *rbacService) GetUsersForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, targetAccountID int64) ([]*service_contract.UserAccountRoleModelResponse, error) {
 	targetAccountIDStr := strconv.FormatInt(targetAccountID, 10)
 
 	users, err := s.repo.GetUsersForTargetAccount(targetAccountIDStr)
@@ -153,10 +153,10 @@ func (s *rbacService) GetUsersForTargetAccount(ctx context.Context, tokenContext
 		})
 		return nil, err
 	}
-	return service_contract.ToUserAccountRoleSliceResponse(users), nil
+	return service_contract.ToUserAccountRoleSliceModelResponse(users), nil
 }
 
-func (s *rbacService) GetTargetAccountsForUser(ctx context.Context, tokenContext service_contract.TokenContext, userID int64) ([]*service_contract.UserAccountRoleResponse, error) {
+func (s *rbacService) GetTargetAccountsForUser(ctx context.Context, tokenContext service_contract.TokenContext, userID int64) ([]*service_contract.UserAccountRoleModelResponse, error) {
 	userIDStr := strconv.FormatInt(userID, 10)
 
 	accs, err := s.repo.GetTargetAccountsForUser(ctx, userIDStr)
@@ -167,7 +167,30 @@ func (s *rbacService) GetTargetAccountsForUser(ctx context.Context, tokenContext
 		})
 		return nil, err
 	}
-	return service_contract.ToUserAccountRoleSliceResponse(accs), nil
+	return service_contract.ToUserAccountRoleSliceModelResponse(accs), nil
+}
+
+func (s *rbacService) GetTargetAccountsForUsers(ctx context.Context, tokenContext service_contract.TokenContext, userIDs []int64) ([]*service_contract.UserAccountRoleModelResponse, error) {
+	strIDs := make([]string, len(userIDs))
+	for _, i := range userIDs {
+		strIDs = append(strIDs, strconv.FormatInt(i, 10))
+	}
+	fmt.Println(strIDs)
+	accs, err := s.repo.GetTargetAccountsForUsers(ctx, strIDs)
+	if err != nil {
+		s.logger.Error(logger.Service, logger.RBACService, "failed to get accounts for users", map[logger.ExtraKey]interface{}{
+			logger.UserID + "s": userIDs,
+			logger.ErrorMessage: err.Error(),
+		})
+		return nil, err
+	}
+	s.logger.Info("", "", "", map[logger.ExtraKey]interface{}{
+		"accs": accs,
+	})
+	s.logger.Info("", "", "", map[logger.ExtraKey]interface{}{
+		"Map": service_contract.ToUserAccountRoleSliceModelResponse(accs),
+	})
+	return service_contract.ToUserAccountRoleSliceModelResponse(accs), nil
 }
 
 func (s *rbacService) RemoveAllRolesForTargetAccount(ctx context.Context, tokenContext service_contract.TokenContext, targetAccountID int64) (bool, error) {
@@ -272,7 +295,7 @@ func (s *rbacService) RemovePermissionForRole(ctx context.Context, tokenContext 
 	return removed, nil
 }
 
-func (s *rbacService) GetPermissionsForRole(ctx context.Context, tokenContext service_contract.TokenContext, role string) ([]*service_contract.RolePermissionResponse, error) {
+func (s *rbacService) GetPermissionsForRole(ctx context.Context, tokenContext service_contract.TokenContext, role string) ([]*service_contract.RolePermissionModelResponse, error) {
 	if !s.isValidRole(role) {
 		err := fmt.Errorf("invalid role: %s", role)
 		s.logger.Error(logger.Service, logger.RBACService, "failed to get permissions for role", map[logger.ExtraKey]interface{}{
@@ -290,5 +313,5 @@ func (s *rbacService) GetPermissionsForRole(ctx context.Context, tokenContext se
 		})
 		return nil, err
 	}
-	return service_contract.ToRolePermissionSliceResponse(perms), nil
+	return service_contract.ToRolePermissionSliceModelModelResponse(perms), nil
 }

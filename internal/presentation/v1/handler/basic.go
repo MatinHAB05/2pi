@@ -95,6 +95,7 @@ func (h *BasicHandler) Start(ctx context.Context, b *bot.Bot, update *models.Upd
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send welcome message", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
 		})
+		return
 	}
 }
 
@@ -108,11 +109,16 @@ func (h *BasicHandler) Help(ctx context.Context, b *bot.Bot, update *models.Upda
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send help message", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
 		})
+		return
 	}
 }
 
 func (h *BasicHandler) Setting(ctx context.Context, b *bot.Bot, update *models.Update) {
 	authToken, ok := h.commonHandler.GetAuthToken(ctx)
+	if !ok {
+		return
+	}
+	infoToken, ok := h.commonHandler.GetUserInfoToken(ctx)
 	if !ok {
 		return
 	}
@@ -123,10 +129,34 @@ func (h *BasicHandler) Setting(ctx context.Context, b *bot.Bot, update *models.U
 
 	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   fmt.Sprintf(MsgSettingsFormat, authToken.UserId),
+		Text:   fmt.Sprintf(MsgSettingsFormat, authToken.UserId, infoToken.Lang),
 	}); err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to send settings message", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
 		})
+		return
 	}
+}
+
+func (h *BasicHandler) SupportUs(ctx context.Context, b *bot.Bot, update *models.Update) {
+
+	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text:   "💛 Support us with give star to repo 💛",
+		ReplyMarkup: &models.InlineKeyboardMarkup{
+			InlineKeyboard: [][]models.InlineKeyboardButton{
+				{
+					{Text: "🫶 Visit Repo", CallbackData: "support:visit-repo", URL: "https://github.com/MatinHAB05/2pi"},
+				},
+			},
+		},
+	},
+	)
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send support us message", map[logger.ExtraKey]interface{}{
+			logger.ErrorMessage: err.Error(),
+		})
+		return
+	}
+
 }

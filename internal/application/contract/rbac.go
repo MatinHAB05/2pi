@@ -13,82 +13,83 @@ type RBACService interface {
 	// User-Role Mapping
 	AddUserRoleForTargetAccount(ctx context.Context, tokenContext TokenContext, userID int64, targetAccountID int64, role string) (bool, error)
 	RemoveUserRoleForTargetAccount(ctx context.Context, tokenContext TokenContext, userID int64, targetAccountID int64, role string) (bool, error)
-	GetUserRolesForTargetAccount(ctx context.Context, tokenContext TokenContext, userID int64, targetAccountID int64) ([]*UserAccountRoleResponse, error)
-	GetUsersForTargetAccount(ctx context.Context, tokenContext TokenContext, targetAccountID int64) ([]*UserAccountRoleResponse, error)
-	GetTargetAccountsForUser(ctx context.Context, tokenContext TokenContext, userID int64) ([]*UserAccountRoleResponse, error)
+	GetUserRolesForTargetAccount(ctx context.Context, tokenContext TokenContext, userID int64, targetAccountID int64) ([]*UserAccountRoleModelResponse, error)
+	GetUsersForTargetAccount(ctx context.Context, tokenContext TokenContext, targetAccountID int64) ([]*UserAccountRoleModelResponse, error)
+	GetTargetAccountsForUser(ctx context.Context, tokenContext TokenContext, userID int64) ([]*UserAccountRoleModelResponse, error)
+	GetTargetAccountsForUsers(ctx context.Context, tokenContext TokenContext, userID []int64) ([]*UserAccountRoleModelResponse, error)
 	RemoveAllRolesForTargetAccount(ctx context.Context, tokenContext TokenContext, targetAccountID int64) (bool, error)
 	RemoveAllRolesForUser(ctx context.Context, tokenContext TokenContext, userID int64) (bool, error)
 
 	// Dynamic Role-Permission Management
 	AddPermissionForRole(ctx context.Context, tokenContext TokenContext, role string, action string) (bool, error)
 	RemovePermissionForRole(ctx context.Context, tokenContext TokenContext, role string, action string) (bool, error)
-	GetPermissionsForRole(ctx context.Context, tokenContext TokenContext, role string) ([]*RolePermissionResponse, error)
+	GetPermissionsForRole(ctx context.Context, tokenContext TokenContext, role string) ([]*RolePermissionModelResponse, error)
 }
 
-type UserAccountRoleResponse struct {
+type UserAccountRoleModelResponse struct {
 	UserID          int64  `json:"user_id"`
 	TargetAccountID int64  `json:"target_account_id"`
 	Role            string `json:"role"`
 }
 
-type RolePermissionResponse struct {
+type RolePermissionModelResponse struct {
 	Role   string `json:"role"`
 	Action string `json:"action"`
 }
 
-func ToUserAccountRoleResponse(dto *repository_contract.UserAccountRoleDTO) *UserAccountRoleResponse {
+func ToUserAccountRoleModelResponse(dto *repository_contract.UserAccountRoleDTO) *UserAccountRoleModelResponse {
 	if dto == nil {
-		return &UserAccountRoleResponse{}
+		return &UserAccountRoleModelResponse{}
 	}
 	userID, _ := strconv.ParseInt(dto.UserID, 10, 64)
 	targetAccountID, _ := strconv.ParseInt(dto.TargetAccountID, 10, 64)
 
-	return &UserAccountRoleResponse{
+	return &UserAccountRoleModelResponse{
 		UserID:          userID,
 		TargetAccountID: targetAccountID,
 		Role:            dto.Role,
 	}
 }
 
-func ToUserAccountRoleSliceResponse(dtos []repository_contract.UserAccountRoleDTO) []*UserAccountRoleResponse {
-	res := make([]*UserAccountRoleResponse, len(dtos))
+func ToUserAccountRoleSliceModelResponse(dtos []repository_contract.UserAccountRoleDTO) []*UserAccountRoleModelResponse {
+	res := make([]*UserAccountRoleModelResponse, len(dtos))
 
 	if len(dtos) == 0 {
 		return res
 	}
 	for i := range dtos {
-		if r := ToUserAccountRoleResponse(&dtos[i]); r != nil {
+		if r := ToUserAccountRoleModelResponse(&dtos[i]); r != nil {
 			res[i] = r
 		}
 	}
 	return res
 }
 
-func ToRolePermissionResponse(dto *repository_contract.RolePermissionDTO) *RolePermissionResponse {
+func ToRolePermissionModelResponse(dto *repository_contract.RolePermissionDTO) *RolePermissionModelResponse {
 	if dto == nil {
-		return &RolePermissionResponse{}
+		return &RolePermissionModelResponse{}
 	}
-	return &RolePermissionResponse{
+	return &RolePermissionModelResponse{
 		Role:   dto.Role,
 		Action: dto.Action,
 	}
 }
 
-func ToRolePermissionSliceResponse(dtos []repository_contract.RolePermissionDTO) []*RolePermissionResponse {
-	res := make([]*RolePermissionResponse, len(dtos))
+func ToRolePermissionSliceModelModelResponse(dtos []repository_contract.RolePermissionDTO) []*RolePermissionModelResponse {
+	res := make([]*RolePermissionModelResponse, len(dtos))
 
 	if len(dtos) == 0 {
 		return res
 	}
 	for i := range dtos {
-		if r := ToRolePermissionResponse(&dtos[i]); r != nil {
+		if r := ToRolePermissionModelResponse(&dtos[i]); r != nil {
 			res[i] = r
 		}
 	}
 	return res
 }
 
-func ExtractUserIDs(dtos []*UserAccountRoleResponse) []int64 {
+func ExtractUserIDs(dtos []*UserAccountRoleModelResponse) []int64 {
 	res := make([]int64, len(dtos))
 
 	if len(dtos) == 0 {
@@ -102,7 +103,7 @@ func ExtractUserIDs(dtos []*UserAccountRoleResponse) []int64 {
 	return res
 }
 
-func ExtractAccountIDs(dtos []*UserAccountRoleResponse) []int64 {
+func ExtractAccountIDs(dtos []*UserAccountRoleModelResponse) []int64 {
 	res := make([]int64, len(dtos))
 
 	if len(dtos) == 0 {

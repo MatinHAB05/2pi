@@ -11,6 +11,7 @@ type RBACRepository interface {
 	GetUserRolesForTargetAccount(userID string, targetAccountID string) ([]UserAccountRoleDTO, error)
 	GetUsersForTargetAccount(targetAccountID string) ([]UserAccountRoleDTO, error)
 	GetTargetAccountsForUser(ctx context.Context, userID string) ([]UserAccountRoleDTO, error)
+	GetTargetAccountsForUsers(ctx context.Context, userID []string) ([]UserAccountRoleDTO, error)
 
 	RemoveAllRolesForTargetAccount(targetAccountID string) (bool, error)
 	RemoveAllRolesForUser(userID string) (bool, error)

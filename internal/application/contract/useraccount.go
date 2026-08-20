@@ -15,6 +15,9 @@ type UserAccountCacheService interface {
 		ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
+		firstName string,
+		lastName string,
+		username string,
 		reqAccountID string,
 		ttl time.Duration,
 	) (*UserAccountCache, error)
@@ -23,21 +26,17 @@ type UserAccountCacheService interface {
 		ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
+		firstName string,
+		lastName string,
+		username string,
 		reqAccountID string,
 		ttl time.Duration,
 	) (*UserAccountCache, error)
 
-	Set(
-		ctx context.Context,
+	InvalidateCache(ctx context.Context, tokenContext TokenContext, userID int64) error
+	Set(ctx context.Context,
 		tokenContext TokenContext,
 		userID int64,
 		accountID int64,
-		ttl time.Duration,
-	) error
-
-	InvalidateCache(
-		ctx context.Context,
-		tokenContext TokenContext,
-		userID int64,
-	) error
+		ttl time.Duration) error
 }

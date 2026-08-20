@@ -46,10 +46,11 @@ func main() {
 	defer closeLF()
 
 	appLogger := logger.NewLogger(logger.Config{
-		Logger:   cfg.Environment.Logger.Logger,
-		FilePath: cfg.Environment.Logger.FilePath,
-		Encoding: cfg.Environment.Logger.Encoding,
-		Level:    cfg.Environment.Logger.Level,
+		Logger:    cfg.Environment.Logger.Logger,
+		FilePath:  cfg.Environment.Logger.FilePath,
+		Encoding:  cfg.Environment.Logger.Encoding,
+		Level:     cfg.Environment.Logger.Level,
+		CleanMode: cfg.Environment.DebugModeOptions.Flag,
 	})
 	appLogger.Info(logger.General, logger.Startup, "starting application bootstrapping", nil)
 
@@ -95,8 +96,8 @@ func main() {
 	// services
 	randomSrv := service.NewRandomService()
 	userinfoSrv := service.NewUserInfoCacheService(userinfocacheRepo, userRepo, appLogger)
-	userSrv := service.NewUserService(userRepo, appLogger, userinfoSrv)
 	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
+	userSrv := service.NewUserService(userRepo, targetaccountRepo, rbacSrv, appLogger, userinfoSrv)
 	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger, rbacSrv)
 	shareaccountSrv := service.NewShareAccountOTPService(shareccountRepo, appLogger)
