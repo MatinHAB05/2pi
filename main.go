@@ -12,6 +12,7 @@ import (
 	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/scraper"
 	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
@@ -93,6 +94,10 @@ func main() {
 	// err := rbacSeeder.SeedAdminUser(ctx, "123456", "123456")
 	// err = rbacSeeder.SeedPermissions(ctx)
 
+	// scrapper
+	herLiferScrap := scraper.NewHerLifeScrapper(cfg.Environment.Redis, appLogger)
+	scrapers := scraper.NewScrppers([]scraper.Scraper{herLiferScrap})
+
 	// services
 	randomSrv := service.NewRandomService()
 	userinfoSrv := service.NewUserInfoCacheService(userinfocacheRepo, userRepo, appLogger)
@@ -112,12 +117,14 @@ func main() {
 	rbacHandler := handler.NewRBACHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler, randomSrv, shareaccountSrv)
 	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &rbacHandler, &commonHandler, appLogger)
 	userHandler := handler.NewUserHandler(userSrv, appLogger, &commonHandler)
+	adminHandler := handler.NewAdminHandler(scrapers, appLogger, commonHandler)
 	hs := router.Handlers{
 		Basic:   basicHandler,
 		Account: accountHandler,
 		Common:  commonHandler,
 		User:    userHandler,
 		RBAC:    rbacHandler,
+		Admin:   adminHandler,
 	}
 
 	// register middlewares
@@ -167,6 +174,7 @@ func main() {
 			{Command: "settings", Description: "Edit target account details"},
 			{Command: "falang", Description: "Change Language To Farsi"},
 			{Command: "englang", Description: "Change Language To English"},
+			{Command: "scrape", Description: "Update Scrape Articles"},
 		},
 	})
 

@@ -52,6 +52,7 @@ func Recovery(debugModeOptions *config.ModeOptions, applogger logger.Logger) Mid
 						fmt.Sprintf("recovered from panic: %s", panicMsg),
 						extra,
 					)
+					fmt.Printf("recovered from panic: %s\n", panicMsg)
 				}
 			}()
 			next(ctx, b, update)

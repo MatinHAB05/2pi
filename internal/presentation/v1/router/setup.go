@@ -25,6 +25,7 @@ type Handlers struct {
 	Common  common.CommonHandler
 	User    handler.UserHandler
 	RBAC    handler.RBACHandler
+	Admin handler.AdminHandler
 }
 
 type Middlewares struct {
@@ -41,6 +42,8 @@ func SetUpRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repo
 	UserRouter(b, handlers, services, repos, middlewares, applogger)
 	RBACRouter(b, handlers, services, repos, middlewares, applogger)
 	AccountRouter(b, handlers, services, repos, middlewares, applogger)
+	AdminRouter(b, handlers, services, repos, middlewares, applogger)
+
 
 	return b
 }

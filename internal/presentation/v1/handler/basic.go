@@ -3,9 +3,11 @@ package handler
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/helper"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/scraper"
 	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/ui"
 	"github.com/MatinHAB05/2pi/pkg/logger"
@@ -47,7 +49,34 @@ func (h *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.
 	userID := helper.GetUserIDFromUpdate(update)
 	chatID := helper.GetChatID(update)
 
-	if obj, ok := UserStates[userID]; ok { // stateful scenario
+	// inline-query scenario
+	if update.InlineQuery != nil {
+		// query := update.InlineQuery.Query
+		_, err := b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{
+			InlineQueryID: update.InlineQuery.ID,
+			Results:       ui.MapArticlesToInlineResults(scraper.ScrapData[:10]),
+			CacheTime:     0, //todo : for debug!
+		})
+
+		if err != nil {
+			fmt.Println("Error answering inline query:", err)
+		}
+		return
+	}
+	// inline-query-resault scenario
+	if update.ChosenInlineResult != nil {
+		rawResID := update.ChosenInlineResult.ResultID
+		res_id := strings.TrimPrefix(rawResID, "article_")
+		h.logger.Info(logger.Handler, logger.Scrap, "user chose artirlce from queryinline", map[logger.ExtraKey]interface{}{
+			logger.UserID:      userID,
+			logger.ChatID:      chatID,
+			"resault-id":       res_id,
+			"resault-id-in-ui": rawResID,
+		})
+		return
+	}
+	// stateful scenario
+	if obj, ok := UserStates[userID]; ok {
 		switch {
 		case h.accountHandler.IsEditAccountFieldState(obj, update):
 			err := h.accountHandler.handleEditAccountFieldState(ctx, b, chatID, userID, update)
@@ -69,7 +98,7 @@ func (h *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.
 			}
 			return
 		}
-
+		return
 	}
 
 	h.logger.Info(logger.Handler, logger.Telegram, "route not found", nil)

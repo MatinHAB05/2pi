@@ -25,6 +25,7 @@ const (
 	RandomService   SubCategory = "Random Service"
 	ExternalService SubCategory = "External"
 	Telegram        SubCategory = "Telegram"
+	Scrap           SubCategory = "Scrap"
 	CacheService    SubCategory = "Cache Service"
 	// General
 	Startup SubCategory = "Startup"
@@ -39,6 +40,7 @@ const (
 const (
 	// Business Context
 	UserID          ExtraKey = "UserID"
+	ChatID          ExtraKey = "ChatID"
 	TargetAccountID ExtraKey = "TargetAccountID"
 	OwnerID         ExtraKey = "OwnerID"
 	Role            ExtraKey = "Role"

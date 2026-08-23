@@ -95,8 +95,8 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 	firstName string,
 	lastName string,
 	username string,
-	lang string,
 	reqAccountID string,
+	lang string,
 	ttl time.Duration,
 ) (*service_contract.UserAccountCache, error) {
 	userIDStr := strconv.FormatInt(userID, 10)
