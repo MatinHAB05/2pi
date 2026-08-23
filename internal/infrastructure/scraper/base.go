@@ -25,13 +25,6 @@ func NewScrppers(ss []Scraper) Scrapers {
 	}
 }
 
-type Article struct {
-	Title       string
-	Description string
-	ImageURL    string
-	URL         string
-}
-
 type TargetInfo struct {
 	Name    string `json:"name"`
 	MainURL string `json:"main_url"`

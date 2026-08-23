@@ -42,7 +42,18 @@ func (h *AdminHandler) UpdateArticles(ctx context.Context, b *bot.Bot, update *m
 		return
 	}
 
-	err := h.scrppers.RunAll(ctx, h.logger)
+	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   "Scrape Stared...",
+	})
+	if err != nil {
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send stared scrape article updates ", map[logger.ExtraKey]interface{}{
+			logger.UserID:       authToken.UserId,
+			logger.ErrorMessage: err.Error(),
+		})
+	}
+
+	err = h.scrppers.RunAll(ctx, h.logger)
 
 	if err != nil {
 		h.logger.Error(logger.Handler, logger.Telegram, "failed to run-all scrpapers", map[logger.ExtraKey]interface{}{

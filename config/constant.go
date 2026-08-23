@@ -20,6 +20,8 @@ type DBConst struct {
 type RedisConst struct {
 }
 
+
+
 func NewConstant() *Constant {
 	return &Constant{
 		Database: DBConst{

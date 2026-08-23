@@ -16,6 +16,40 @@ import (
 	"github.com/gocolly/redisstorage"
 )
 
+type herLifeConfig struct {
+	AllowedDomain    string
+	BaseURL          string
+	BlogStartURL     string
+	UserAgent        string
+	RedisPrefix      string
+	NumWorkers       int
+	QueueSize        int
+	Parallelism      int
+	Delay            time.Duration
+	CategorySelector string
+	ArticleSelector  string
+}
+
+func NewHerLifeConfig() herLifeConfig {
+	return herLifeConfig{}
+}
+
+func DefaultHerLifeConfig() herLifeConfig {
+	return herLifeConfig{
+		AllowedDomain:    "herlifeapp.com",
+		BaseURL:          "https://herlifeapp.com",
+		BlogStartURL:     "https://herlifeapp.com/blog/",
+		UserAgent:        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		RedisPrefix:      "colly_herlife",
+		NumWorkers:       5,
+		QueueSize:        100,
+		Parallelism:      10,
+		Delay:            100 * time.Millisecond,
+		CategorySelector: `a[href*="/blog/category/"]`,
+		ArticleSelector:  `a[href*="/blog/articles/"]`,
+	}
+}
+
 type herLifeArticle struct {
 	Title       string
 	Description string
@@ -24,13 +58,56 @@ type herLifeArticle struct {
 }
 
 type herLifeEngine struct {
+	cfg      *herLifeConfig
 	redisCfg config.Redis
 	logger   logger.Logger
 	repo     repository_contract.ArticleRepository
 }
 
-func NewHerLifeScrapper(redisCfg config.Redis, logger logger.Logger, repo repository_contract.ArticleRepository) Scraper {
+func NewHerLifeScrapper(
+	cfg *herLifeConfig,
+	redisCfg config.Redis,
+	logger logger.Logger,
+	repo repository_contract.ArticleRepository,
+) Scraper {
+	defaults := DefaultHerLifeConfig()
+
+	if cfg.AllowedDomain == "" {
+		cfg.AllowedDomain = defaults.AllowedDomain
+	}
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = defaults.BaseURL
+	}
+	if cfg.BlogStartURL == "" {
+		cfg.BlogStartURL = defaults.BlogStartURL
+	}
+	if cfg.UserAgent == "" {
+		cfg.UserAgent = defaults.UserAgent
+	}
+	if cfg.RedisPrefix == "" {
+		cfg.RedisPrefix = defaults.RedisPrefix
+	}
+	if cfg.NumWorkers <= 0 {
+		cfg.NumWorkers = defaults.NumWorkers
+	}
+	if cfg.QueueSize <= 0 {
+		cfg.QueueSize = defaults.QueueSize
+	}
+	if cfg.Parallelism <= 0 {
+		cfg.Parallelism = defaults.Parallelism
+	}
+	if cfg.Delay <= 0 {
+		cfg.Delay = defaults.Delay
+	}
+	if cfg.CategorySelector == "" {
+		cfg.CategorySelector = defaults.CategorySelector
+	}
+	if cfg.ArticleSelector == "" {
+		cfg.ArticleSelector = defaults.ArticleSelector
+	}
+
 	return &herLifeEngine{
+		cfg:      cfg,
 		redisCfg: redisCfg,
 		logger:   logger,
 		repo:     repo,
@@ -40,7 +117,7 @@ func NewHerLifeScrapper(redisCfg config.Redis, logger logger.Logger, repo reposi
 func (engine *herLifeEngine) WhoIsTarget() TargetInfo {
 	return TargetInfo{
 		Name:    "HerLife-Blogs",
-		MainURL: "https://herlifeapp.com/blog",
+		MainURL: engine.cfg.BlogStartURL,
 	}
 }
 
@@ -49,53 +126,51 @@ func (engine *herLifeEngine) Run(ctx context.Context, scrapDataMu *sync.Mutex) e
 }
 
 func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mutex) error {
-	allowedDomain := "herlifeapp.com"
+	allowedDomain := engine.cfg.AllowedDomain
 
 	storage := &redisstorage.Storage{
 		Address:  engine.redisCfg.Host + ":" + strconv.Itoa(engine.redisCfg.Port),
 		Password: engine.redisCfg.Password,
 		DB:       engine.redisCfg.RDBNumber,
-		Prefix:   "colly_herlife",
+		Prefix:   engine.cfg.RedisPrefix,
 	}
 
 	baseCollector := colly.NewCollector(
 		colly.AllowedDomains(allowedDomain, "www."+allowedDomain),
 		colly.Async(true),
+		colly.UserAgent(engine.cfg.UserAgent),
 	)
 
 	if err := baseCollector.SetStorage(storage); err != nil {
-		engine.logger.Errorf("failed to set redis storage for colly:%w", err)
+		engine.logger.Errorf("failed to set redis storage for colly: %v", err)
 		return fmt.Errorf("failed to set redis storage: %w", err)
 	}
 	defer storage.Client.Close()
 
 	err := baseCollector.Limit(&colly.LimitRule{
 		DomainGlob:  "*" + allowedDomain,
-		Parallelism: 10,
-		Delay:       100 * time.Millisecond,
+		Parallelism: engine.cfg.Parallelism,
+		Delay:       engine.cfg.Delay,
 	})
 	if err != nil {
-		engine.logger.Errorf("failed to set limit rule:%w", err)
+		engine.logger.Errorf("failed to set limit rule: %v", err)
 		return err
 	}
 
 	baseCollector.OnRequest(func(r *colly.Request) {})
 
 	baseCollector.OnError(func(r *colly.Response, err error) {
-		engine.logger.Errorf("request failed for URL %s:%w", r.Request.URL, err)
+		engine.logger.Errorf("request failed for URL %s: %v", r.Request.URL, err)
 	})
 
 	// -------------------------------------------------------------
 	// SETUP QUEUE & WORKER POOL FOR DB SAVES
 	// -------------------------------------------------------------
-	const numWorkers = 5
-	const queueSize = 100
-
-	articleQueue := make(chan herLifeArticle, queueSize)
+	articleQueue := make(chan herLifeArticle, engine.cfg.QueueSize)
 	var dbWg sync.WaitGroup
 
 	// Start worker goroutines to process DB writes concurrently from the queue
-	for i := 0; i < numWorkers; i++ {
+	for i := 0; i < engine.cfg.NumWorkers; i++ {
 		dbWg.Add(1)
 		go func(workerID int) {
 			defer dbWg.Done()
@@ -121,7 +196,7 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 	var categoryURLs []string
 	var catMu sync.Mutex
 
-	categoryCollector.OnHTML(`a[href*="/blog/category/"]`, func(e *colly.HTMLElement) {
+	categoryCollector.OnHTML(engine.cfg.CategorySelector, func(e *colly.HTMLElement) {
 		link := e.Request.AbsoluteURL(e.Attr("href"))
 		if link == "" {
 			return
@@ -134,8 +209,8 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 		}
 	})
 
-	if err := categoryCollector.Visit("https://herlifeapp.com/blog/"); err != nil {
-		engine.logger.Errorf("failed to visit initial category page:%w", err)
+	if err := categoryCollector.Visit(engine.cfg.BlogStartURL); err != nil {
+		engine.logger.Errorf("failed to visit initial category page: %v", err)
 		close(articleQueue)
 		return err
 	}
@@ -148,7 +223,7 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 	var articleURLs []string
 	var artMu sync.Mutex
 
-	articleCollector.OnHTML(`a[href*="/blog/articles/"]`, func(e *colly.HTMLElement) {
+	articleCollector.OnHTML(engine.cfg.ArticleSelector, func(e *colly.HTMLElement) {
 		link := e.Request.AbsoluteURL(e.Attr("href"))
 		if link == "" {
 			return
@@ -195,7 +270,6 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 			ImageURL:    strings.TrimSpace(imageURL),
 		}
 
-		// Push directly to queue as soon as parsed
 		select {
 		case <-ctx.Done():
 			return
@@ -211,10 +285,8 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 		_ = pageCollector.Visit(artURL)
 	}
 
-	// Wait for scrapers to complete before closing queue
 	pageCollector.Wait()
 
-	// Close channel and wait for DB workers to finish remaining items
 	close(articleQueue)
 	dbWg.Wait()
 

@@ -93,12 +93,17 @@ func main() {
 
 	// seed
 	rbacSeeder := seed.NewRBACSeeder(userRepo, rbacRepo, targetaccountRepo, &cfg.Environment.Admin)
-	_, _, err := rbacSeeder.SeedAdminUser(ctx)
-	err = rbacSeeder.SeedPermissions(ctx)
+	_, _, _ = rbacSeeder.Execute(ctx)
 
 	// scrapper
-	herLiferScrap := scraper.NewHerLifeScrapper(cfg.Environment.Redis, appLogger, articleRepo)
-	scrapers := scraper.NewScrppers([]scraper.Scraper{herLiferScrap})
+	herlifeCfg := scraper.NewHerLifeConfig()
+	herLiferScrap := scraper.NewHerLifeScrapper(&herlifeCfg, cfg.Environment.Redis, appLogger, articleRepo)
+	womanhealtchCfg := scraper.NewHealthyWomenConfig()
+	womanHealthScarp := scraper.NewHealthyWomenScraper(&womanhealtchCfg, cfg.Environment.Redis, appLogger, articleRepo)
+	scrapers := scraper.NewScrppers([]scraper.Scraper{
+		herLiferScrap,
+		womanHealthScarp,
+	})
 
 	// services
 	randomSrv := service.NewRandomService()
