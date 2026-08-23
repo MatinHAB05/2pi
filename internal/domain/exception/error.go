@@ -15,4 +15,5 @@ var (
 	ErrUserRoleNotFound                  = errors.New("user_role missing from context")
 	ErrInvalidUserIDType                 = errors.New("user_id in context has invalid type")
 	ErrLangNotFound                      = errors.New("lang not found in context")
+	ErrArticleNotFound                   = errors.New("article not found")
 )
