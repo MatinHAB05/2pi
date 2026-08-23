@@ -2,9 +2,7 @@ package scraper
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/MatinHAB05/2pi/pkg/logger"
@@ -40,9 +38,6 @@ type TargetInfo struct {
 	MainURL string `json:"main_url"`
 }
 
-// TODO : replace it with database - but for now :
-var ScrapData []Article
-
 func (ss Scrapers) RunAll(ctx context.Context, applog logger.Logger) error {
 
 	wg := sync.WaitGroup{}
@@ -69,25 +64,6 @@ func (ss Scrapers) RunAll(ctx context.Context, applog logger.Logger) error {
 	}
 
 	wg.Wait()
-
-	// -------------------------------------------------------------
-	// Save Scraped Data to File
-	// -------------------------------------------------------------
-	data, err := json.MarshalIndent(ScrapData, "", "  ")
-	if err != nil {
-		applog.Error(logger.IO, logger.Scrap, "failed to marshal scraped data to JSON", map[logger.ExtraKey]interface{}{
-			logger.ErrorMessage: err.Error(),
-		})
-		return fmt.Errorf("marshal indent err: %w", err)
-	}
-
-	err = os.WriteFile("for-now.json", data, 0644)
-	if err != nil {
-		applog.Error(logger.IO, logger.Scrap, "failed to write content to file", map[logger.ExtraKey]interface{}{
-			logger.ErrorMessage: err.Error(),
-		})
-		return fmt.Errorf("failed to write data: %w", err)
-	}
 
 	return nil
 }

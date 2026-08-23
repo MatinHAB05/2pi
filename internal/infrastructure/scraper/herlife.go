@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/MatinHAB05/2pi/config"
+	"github.com/MatinHAB05/2pi/internal/domain/entity"
+	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/redisstorage"
@@ -24,12 +26,14 @@ type herLifeArticle struct {
 type herLifeEngine struct {
 	redisCfg config.Redis
 	logger   logger.Logger
+	repo     repository_contract.ArticleRepository
 }
 
-func NewHerLifeScrapper(redisCfg config.Redis, logger logger.Logger) Scraper {
+func NewHerLifeScrapper(redisCfg config.Redis, logger logger.Logger, repo repository_contract.ArticleRepository) Scraper {
 	return &herLifeEngine{
 		redisCfg: redisCfg,
 		logger:   logger,
+		repo:     repo,
 	}
 }
 
@@ -51,7 +55,7 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 		Address:  engine.redisCfg.Host + ":" + strconv.Itoa(engine.redisCfg.Port),
 		Password: engine.redisCfg.Password,
 		DB:       engine.redisCfg.RDBNumber,
-		Prefix:   "colly_herlife", // Prevents collision with other scrapers
+		Prefix:   "colly_herlife",
 	}
 
 	baseCollector := colly.NewCollector(
@@ -75,13 +79,40 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 		return err
 	}
 
-	baseCollector.OnRequest(func(r *colly.Request) {
-		// before req
-	})
+	baseCollector.OnRequest(func(r *colly.Request) {})
 
 	baseCollector.OnError(func(r *colly.Response, err error) {
 		engine.logger.Errorf("request failed for URL %s:%w", r.Request.URL, err)
 	})
+
+	// -------------------------------------------------------------
+	// SETUP QUEUE & WORKER POOL FOR DB SAVES
+	// -------------------------------------------------------------
+	const numWorkers = 5
+	const queueSize = 100
+
+	articleQueue := make(chan herLifeArticle, queueSize)
+	var dbWg sync.WaitGroup
+
+	// Start worker goroutines to process DB writes concurrently from the queue
+	for i := 0; i < numWorkers; i++ {
+		dbWg.Add(1)
+		go func(workerID int) {
+			defer dbWg.Done()
+			for art := range articleQueue {
+				dbArticle := &entity.Article{
+					Title:       art.Title,
+					Description: art.Description,
+					ImageURL:    art.ImageURL,
+					URL:         art.URL,
+				}
+
+				if err := engine.repo.Create(ctx, dbArticle); err != nil {
+					engine.logger.Errorf("[Worker %d] failed to save article [%s]: %v", workerID, art.URL, err)
+				}
+			}
+		}(i)
+	}
 
 	// -------------------------------------------------------------
 	// STEP 1: Discover Categories
@@ -105,6 +136,7 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 
 	if err := categoryCollector.Visit("https://herlifeapp.com/blog/"); err != nil {
 		engine.logger.Errorf("failed to visit initial category page:%w", err)
+		close(articleQueue)
 		return err
 	}
 	categoryCollector.Wait()
@@ -131,6 +163,7 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 
 	for _, catURL := range categoryURLs {
 		if err := ctx.Err(); err != nil {
+			close(articleQueue)
 			return err
 		}
 		_ = articleCollector.Visit(catURL)
@@ -138,11 +171,9 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 	articleCollector.Wait()
 
 	// -------------------------------------------------------------
-	// STEP 3: Extract Content from Each Article
+	// STEP 3: Extract Content & Enqueue Immediately
 	// -------------------------------------------------------------
 	pageCollector := baseCollector.Clone()
-	var articles []herLifeArticle
-	var pageMu sync.Mutex
 
 	pageCollector.OnHTML("html", func(e *colly.HTMLElement) {
 		title := strings.TrimSpace(e.ChildText("h1"))
@@ -157,40 +188,37 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 
 		imageURL := e.ChildAttr(`meta[property="og:image"]`, "content")
 
-		pageMu.Lock()
-		articles = append(articles, herLifeArticle{
+		article := herLifeArticle{
 			Title:       title,
 			URL:         e.Request.URL.String(),
 			Description: strings.TrimSpace(description),
 			ImageURL:    strings.TrimSpace(imageURL),
-		})
-		pageMu.Unlock()
+		}
+
+		// Push directly to queue as soon as parsed
+		select {
+		case <-ctx.Done():
+			return
+		case articleQueue <- article:
+		}
 	})
 
 	for _, artURL := range articleURLs {
 		if err := ctx.Err(); err != nil {
+			close(articleQueue)
 			return err
 		}
 		_ = pageCollector.Visit(artURL)
 	}
+
+	// Wait for scrapers to complete before closing queue
 	pageCollector.Wait()
 
-	// -------------------------------------------------------------
-	// STEP 4: Save Data
-	// -------------------------------------------------------------
-	for _, art := range articles {
-		func() {
-			scrapDataMu.Lock()
-			defer scrapDataMu.Unlock()
-			ScrapData = append(ScrapData, Article{
-				Title:       art.Title,
-				Description: art.Description,
-				ImageURL:    art.ImageURL,
-				URL:         art.URL,
-			})
-		}()
-	}
+	// Close channel and wait for DB workers to finish remaining items
+	close(articleQueue)
+	dbWg.Wait()
 
+	engine.logger.Infof("Finished scraping and processing all database writes.")
 	return nil
 }
 

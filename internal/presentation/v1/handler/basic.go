@@ -3,11 +3,11 @@ package handler
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/helper"
-	"github.com/MatinHAB05/2pi/internal/infrastructure/scraper"
 	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/ui"
 	"github.com/MatinHAB05/2pi/pkg/logger"
@@ -20,6 +20,7 @@ var UserStates = make(map[int64]map[string]any)
 type BasicHandler struct {
 	userService    service_contract.UserService
 	accountService service_contract.TargetAccountService
+	articleService service_contract.ArticleService
 
 	rbacHandler    *RBACHandler
 	accountHandler *AccountHandler
@@ -34,6 +35,7 @@ func NewBasicHandler(
 	rbacHandler *RBACHandler,
 	commonHandler *common.CommonHandler,
 	logger logger.Logger,
+	articleService service_contract.ArticleService,
 ) BasicHandler {
 	return BasicHandler{
 		userService:    userService,
@@ -42,6 +44,7 @@ func NewBasicHandler(
 		accountService: accountService,
 		commonHandler:  commonHandler,
 		rbacHandler:    rbacHandler,
+		articleService: articleService,
 	}
 }
 
@@ -52,9 +55,15 @@ func (h *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.
 	// inline-query scenario
 	if update.InlineQuery != nil {
 		// query := update.InlineQuery.Query
-		_, err := b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{
+		//for now
+		ScrapData, err := h.articleService.ListArticles(ctx)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{
 			InlineQueryID: update.InlineQuery.ID,
-			Results:       ui.MapArticlesToInlineResults(scraper.ScrapData[:10]),
+			Results:       ui.MapArticlesToInlineResults(ScrapData[:min(len(ScrapData), 10)]),
 			CacheTime:     0, //todo : for debug!
 		})
 

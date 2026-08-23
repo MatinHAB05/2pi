@@ -3,12 +3,12 @@ package ui
 import (
 	"fmt"
 
-	"github.com/MatinHAB05/2pi/internal/infrastructure/scraper"
+	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/go-telegram/bot/models"
 )
 
 // Map single Article to InlineQueryResultArticle
-func MapArticleToInlineResult(id string, article scraper.Article) models.InlineQueryResult {
+func MapArticleToInlineResult(id string, article service_contract.ArticleResponse) models.InlineQueryResult {
 	// Fallback values if fields are empty
 	imageURL := article.ImageURL
 	if imageURL == "" {
@@ -45,7 +45,7 @@ func MapArticleToInlineResult(id string, article scraper.Article) models.InlineQ
 }
 
 // Map slice of Articles to []models.InlineQueryResult
-func MapArticlesToInlineResults(articles []scraper.Article) []models.InlineQueryResult {
+func MapArticlesToInlineResults(articles []service_contract.ArticleResponse) []models.InlineQueryResult {
 	results := make([]models.InlineQueryResult, 0, len(articles))
 
 	for i, article := range articles {
