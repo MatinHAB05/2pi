@@ -15,7 +15,7 @@ func Recovery(debugModeOptions *config.ModeOptions, applogger logger.Logger) Mid
 	return func(next bot.HandlerFunc) bot.HandlerFunc {
 		return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			defer func() {
-				if debugModeOptions.DebugFlag {
+				if debugModeOptions.Debug {
 					return
 				}
 				if rec := recover(); rec != nil {

@@ -8,7 +8,6 @@ import (
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
 
-// TODO
 type Scraper interface {
 	WhoIsTarget() TargetInfo
 	Run(ctx context.Context, scrapDataMu *sync.Mutex) error

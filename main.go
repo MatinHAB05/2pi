@@ -13,6 +13,7 @@ import (
 	"github.com/MatinHAB05/2pi/internal/infrastructure/rbac"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/repository"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/scraper"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/seed"
 	"github.com/MatinHAB05/2pi/internal/presentation/common"
 	"github.com/MatinHAB05/2pi/internal/presentation/middleware"
 	"github.com/MatinHAB05/2pi/internal/presentation/v1/handler"
@@ -51,7 +52,7 @@ func main() {
 		FilePath:  cfg.Environment.Logger.FilePath,
 		Encoding:  cfg.Environment.Logger.Encoding,
 		Level:     cfg.Environment.Logger.Level,
-		CleanMode: cfg.Environment.ModeOptions.DebugFlag,
+		CleanMode: cfg.Environment.ModeOptions.Debug,
 	})
 	appLogger.Info(logger.General, logger.Startup, "starting application bootstrapping", nil)
 
@@ -91,9 +92,9 @@ func main() {
 	}
 
 	// seed
-	// rbacSeeder := seed.NewRBACSeeder(rbacRepo)
-	// err := rbacSeeder.SeedAdminUser(ctx, "123456", "123456")
-	// err = rbacSeeder.SeedPermissions(ctx)
+	rbacSeeder := seed.NewRBACSeeder(userRepo, rbacRepo, targetaccountRepo, &cfg.Environment.Admin)
+	_, _, err := rbacSeeder.SeedAdminUser(ctx)
+	err = rbacSeeder.SeedPermissions(ctx)
 
 	// scrapper
 	herLiferScrap := scraper.NewHerLifeScrapper(cfg.Environment.Redis, appLogger, articleRepo)
@@ -152,7 +153,7 @@ func main() {
 			bot.Middleware(recoveryMid),
 		),
 	}
-	if cfg.Environment.ModeOptions.DebugFlag {
+	if cfg.Environment.ModeOptions.Debug {
 		opts = append(opts, bot.WithDebug())
 	}
 

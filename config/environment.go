@@ -8,6 +8,7 @@ import (
 )
 
 type Environment struct {
+	Admin       AdminConfig  `mapstructure:",squash"`
 	BotToken    BotToken     `mapstructure:",squash"`
 	ModeOptions ModeOptions  `mapstructure:",squash" json:"mode_options"`
 	DataBase    DataBase     `mapstructure:",squash" json:"database"`
@@ -16,14 +17,21 @@ type Environment struct {
 	Casbin      Casbin       `mapstructure:",squash" json:"casbin"`
 	Email       EmailConfig  `mapstructure:",squash" json:"email"`
 }
-
+type AdminConfig struct {
+	UserID    int64  `mapstructure:"ADMIN_USER_ID" json:"admin_user_id"`
+	Username  string `mapstructure:"ADMIN_USER_USERNAME" json:"admin_username"`
+	FirstName string `mapstructure:"ADMIN_USER_FIRSTNAME" json:"admin_first_name"`
+	LastName  string `mapstructure:"ADMIN_USER_LASTNAME" json:"admin_last_name"`
+	Language  string `mapstructure:"ADMIN_USER_LANG" json:"admin_language"`
+}
 type BotToken struct {
 	Token string `mapstructure:"BOT_TOKEN" json:"bot_token"`
 }
 
 type ModeOptions struct {
-	DebugFlag      bool `mapstructure:"DEBUG_FLAG" json:"debug_flag"`
-	ProductionFlag bool `mapstructure:"PRODUCTION_FLAG" json:"production_flag"`
+	Debug               bool `mapstructure:"DEBUG_FLAG" json:"debug_flag"`
+	ProductionFlag      bool `mapstructure:"PRODUCTION_FLAG" json:"production_flag"`
+	DebugRBACMiddelware bool `mapstructure:"DEBUG_RBAC" json:"debug_rbac_middle"`
 }
 
 type DataBase struct {

@@ -37,7 +37,7 @@ func NewEmailService(
 func (s *emailService) SendEmail(ctx context.Context, tokenContext service_contract.TokenContext, req service_contract.SendEmailRequest) (*bool, error) {
 	success := true
 
-	if s.debugModeConfig != nil && s.debugModeConfig.DebugFlag {
+	if s.debugModeConfig != nil && s.debugModeConfig.Debug {
 		debugText := fmt.Sprintf("[%s] To: %s | Subject: %s\nText: %s\n-------------------------------------------------------------------------------\n",
 			time.Now().Format(time.RFC3339), req.To, req.Subject, req.TextBody)
 
