@@ -14,6 +14,8 @@ import (
 	"github.com/MatinHAB05/2pi/pkg/logger"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/redisstorage"
 )
@@ -338,4 +340,81 @@ func (engine *healthyWomenEngine) matchesURLPattern(href string) bool {
 		}
 	}
 	return false
+}
+
+// BUG : microsoft defender recoginize leacless-process or chorome process as trojan and func failed in the begigng
+func (engine *healthyWomenEngine) fetchCategoryArticleURLs_RodVersion(ctx context.Context, categoryURLs []string) ([]string, error) {
+	u, err := launcher.New().
+		Headless(true).
+		Set("disable-gpu", "true").
+		Set("user-agent", engine.cfg.UserAgent).
+		Launch()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+
+	browser := rod.New().ControlURL(u).MustConnect().Context(ctx)
+	defer browser.MustClose()
+
+	page := browser.MustPage("")
+	defer page.MustClose()
+
+	visitedURLs := make(map[string]bool)
+	var articleURLs []string
+
+	for _, catURL := range categoryURLs {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		engine.logger.Infof("Rod navigating and scrolling: %s", catURL)
+
+		navErr := rod.Try(func() {
+			page.MustNavigate(catURL).MustWaitLoad()
+		})
+		if navErr != nil {
+			engine.logger.Errorf("Rod navigation failed for %s: %v", catURL, navErr)
+			continue
+		}
+
+		time.Sleep(2 * time.Second)
+
+		for i := 1; i <= engine.cfg.ScrollCount; i++ {
+			_ = rod.Try(func() {
+				page.MustEval(`window.scrollTo(0, document.body.scrollHeight)`)
+			})
+			time.Sleep(2 * time.Second)
+		}
+
+		extractErr := rod.Try(func() {
+			links := page.MustElements("a[href]")
+
+			for _, link := range links {
+				hrefAttr := link.MustAttribute("href")
+				if hrefAttr == nil {
+					continue
+				}
+				href := *hrefAttr
+
+				if engine.matchesURLPattern(href) {
+					if strings.HasPrefix(href, "/") {
+						href = engine.cfg.BaseURL + href
+					}
+
+					if !visitedURLs[href] {
+						visitedURLs[href] = true
+						articleURLs = append(articleURLs, href)
+					}
+				}
+			}
+		})
+
+		if extractErr != nil {
+			engine.logger.Errorf("Rod failed to extract elements for %s: %v", catURL, extractErr)
+			continue
+		}
+	}
+
+	return articleURLs, nil
 }
