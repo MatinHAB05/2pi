@@ -20,12 +20,14 @@ func NewUserRepository(db database.Database) repository_contract.UserRepository 
 }
 
 func (r *userRepository) Create(ctx context.Context, user *entity.User) error {
-	return r.db.GetDB().WithContext(ctx).Create(user).Error
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	return db.GetDB().WithContext(ctx).Create(user).Error
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id int64) (*entity.User, error) {
 	var user entity.User
-	err := r.db.GetDB().WithContext(ctx).First(&user, id).Error
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	err := db.GetDB().WithContext(ctx).First(&user, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, exception.ErrUserNotFound
 	}
@@ -34,7 +36,8 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*entity.User, e
 
 func (r *userRepository) GetWithTargetAccounts(ctx context.Context, id int64) (*entity.User, error) {
 	var user entity.User
-	err := r.db.GetDB().WithContext(ctx).
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	err := db.GetDB().WithContext(ctx).
 		Preload("TargetAccounts").
 		First(&user, id).
 		Error
@@ -51,7 +54,8 @@ func (r *userRepository) GetByIDs(ctx context.Context, ids []int64) ([]entity.Us
 		return users, nil
 	}
 
-	err := r.db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&users).Error
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	err := db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +68,8 @@ func (r *userRepository) GetByIDsWithTargetAccounts(ctx context.Context, ids []i
 		return users, nil
 	}
 
-	err := r.db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&users).Preload("TargetAccounts").Error
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	err := db.GetDB().WithContext(ctx).Where("id IN ?", ids).Find(&users).Preload("TargetAccounts").Error
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +77,13 @@ func (r *userRepository) GetByIDsWithTargetAccounts(ctx context.Context, ids []i
 }
 
 func (r *userRepository) Update(ctx context.Context, user *entity.User) error {
-	return r.db.GetDB().WithContext(ctx).Where("id = ?", user.BaseEntity.ID).Updates(user).Error
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	return db.GetDB().WithContext(ctx).Where("id = ?", user.BaseEntity.ID).Updates(user).Error
 }
 
 func (r *userRepository) Delete(ctx context.Context, id int64) error {
-	result := r.db.GetDB().WithContext(ctx).Delete(&entity.User{}, id)
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	result := db.GetDB().WithContext(ctx).Delete(&entity.User{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -88,7 +95,8 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 
 func (r *userRepository) Exists(ctx context.Context, id int64) (bool, error) {
 	var count int64
-	err := r.db.GetDB().WithContext(ctx).
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	err := db.GetDB().WithContext(ctx).
 		Model(&entity.User{}).
 		Where("id = ?", id).
 		Count(&count).

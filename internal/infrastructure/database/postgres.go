@@ -11,7 +11,7 @@ import (
 
 type Database interface {
 	GetDB() *gorm.DB
-	WithTransaction(fn func(Database) error) error
+	WithTx(tx *gorm.DB) Database
 }
 
 type PostgresDatabase struct {
@@ -23,7 +23,7 @@ var (
 	dbInstance *PostgresDatabase
 )
 
-func NewPostgresDatabase(dbConfig *config.DataBase, dbConst *config.DBConst) *PostgresDatabase {
+func NewPostgresDatabase(dbConfig *config.DataBase, dbConst *config.DBConst) Database {
 	dbOnce.Do(func() {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=UTC",
@@ -56,12 +56,9 @@ func NewPostgresDatabase(dbConfig *config.DataBase, dbConst *config.DBConst) *Po
 }
 
 func (pgx *PostgresDatabase) GetDB() *gorm.DB {
-	return dbInstance.DB
+	return pgx.DB
 }
 
-func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
-	return pgx.DB.Transaction(func(tx *gorm.DB) error {
-		txWrapper := &PostgresDatabase{DB: tx}
-		return fn(txWrapper)
-	})
+func (pgx *PostgresDatabase) WithTx(tx *gorm.DB) Database {
+	return &PostgresDatabase{DB: tx}
 }

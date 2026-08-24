@@ -6,18 +6,22 @@ import (
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
 
 type targetAccountService struct {
-	repo   repository_contract.TargetAccountRepository
-	logger logger.Logger
+	repo       repository_contract.TargetAccountRepository
+	logger     logger.Logger
+	trxManager database.TrxManager
 }
 
-func NewTargetAccountService(repo repository_contract.TargetAccountRepository, log logger.Logger) service_contract.TargetAccountService {
+func NewTargetAccountService(repo repository_contract.TargetAccountRepository, log logger.Logger,
+	trxManager database.TrxManager) service_contract.TargetAccountService {
 	return &targetAccountService{
-		repo:   repo,
-		logger: log,
+		repo:       repo,
+		logger:     log,
+		trxManager: trxManager,
 	}
 }
 

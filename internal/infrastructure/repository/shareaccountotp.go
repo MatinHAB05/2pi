@@ -69,13 +69,15 @@ func (r *shareAccountOTPCacheRepository) Get(ctx context.Context, otp string) (*
 	}, nil
 }
 
-func (r *shareAccountOTPCacheRepository) Delete(ctx context.Context, otp string) error {
+func (r *shareAccountOTPCacheRepository) Delete(ctx context.Context, otp string) (bool, error) {
 	key := r.buildShareAccountOTPCacheKey(otp)
 
-	if err := r.client.GetRDB().Del(ctx, key).Err(); err != nil {
-		return fmt.Errorf("redis delete otp cache error: %w", err)
+	deletedCount, err := r.client.GetRDB().Del(ctx, key).Result()
+	if err != nil {
+		return false, fmt.Errorf("redis delete otp cache error: %w", err)
 	}
-	return nil
+
+	return deletedCount > 0, nil
 }
 
 func (r *shareAccountOTPCacheRepository) Exists(ctx context.Context, otp string) (*bool, error) {

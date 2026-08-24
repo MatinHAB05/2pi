@@ -77,7 +77,7 @@ func (s *RBACSeeder) SeedPermissions(ctx context.Context) error {
 	for _, perm := range defaultPermissions {
 		permissionAction := fmt.Sprintf("%s:%s", perm.Resource, perm.Action)
 
-		_, err := s.rbacRepo.AddPermissionForRole(string(perm.Role), permissionAction)
+		_, err := s.rbacRepo.AddPermissionForRole(ctx, string(perm.Role), permissionAction)
 		if err != nil {
 			return fmt.Errorf("failed to seed permission [%s -> %s]: %w", perm.Role, permissionAction, err)
 		}
@@ -122,7 +122,7 @@ func (s *RBACSeeder) SeedAdminUser(ctx context.Context) (int64, int64, error) {
 	adminUserIDStr := strconv.FormatInt(adminUserID, 10)
 	targetIDStr := strconv.FormatInt(targetID, 10)
 
-	_, err = s.rbacRepo.AddUserRoleForTargetAccount(adminUserIDStr, targetIDStr, string(entity.RoleAdmin))
+	_, err = s.rbacRepo.AddUserRoleForTargetAccount(ctx, adminUserIDStr, targetIDStr, string(entity.RoleAdmin))
 	if err != nil {
 		return -1, -1, fmt.Errorf("failed to assign admin role to user %d with target %d: %w", adminUserID, targetID, err)
 	}

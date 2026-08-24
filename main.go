@@ -105,15 +105,18 @@ func main() {
 		womanHealthScarp,
 	})
 
+	// Trx Manger
+	trxManager := database.NewTrxManager(pgDB)
+
 	// services
 	randomSrv := service.NewRandomService()
 	userinfoSrv := service.NewUserInfoCacheService(userinfocacheRepo, userRepo, appLogger)
-	rbacSrv := service.NewRBACService(rbacRepo, appLogger)
-	userSrv := service.NewUserService(userRepo, targetaccountRepo, rbacSrv, appLogger, userinfoSrv)
-	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger)
-	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger, rbacSrv)
+	rbacSrv := service.NewRBACService(rbacRepo, appLogger, trxManager)
+	userSrv := service.NewUserService(userRepo, targetaccountRepo, rbacSrv, appLogger, userinfoSrv, trxManager)
+	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger, trxManager)
+	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger, trxManager, rbacSrv)
 	shareaccountSrv := service.NewShareAccountOTPService(shareccountRepo, appLogger)
-	articleSrv := service.NewArticleService(articleRepo)
+	articleSrv := service.NewArticleService(articleRepo, trxManager)
 	ss := router.Services{
 		UserAccountCache: useraccountSrv,
 		UserInfoCache:    userinfoSrv,

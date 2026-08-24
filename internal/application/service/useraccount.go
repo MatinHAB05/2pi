@@ -11,6 +11,7 @@ import (
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	"github.com/MatinHAB05/2pi/internal/domain/exception"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
 
@@ -20,6 +21,7 @@ type userAccountCacheService struct {
 	accountRepo repository_contract.TargetAccountRepository
 	rbacService service_contract.RBACService
 	logger      logger.Logger
+	trxManager  database.TrxManager
 }
 
 func NewUserAccountCacheService(
@@ -27,6 +29,7 @@ func NewUserAccountCacheService(
 	userRepo repository_contract.UserRepository,
 	accountRepo repository_contract.TargetAccountRepository,
 	log logger.Logger,
+	trxManager database.TrxManager,
 	rbacService service_contract.RBACService,
 ) service_contract.UserAccountCacheService {
 	return &userAccountCacheService{
@@ -34,10 +37,12 @@ func NewUserAccountCacheService(
 		userRepo:    userRepo,
 		accountRepo: accountRepo,
 		logger:      log,
+		trxManager:  trxManager,
 		rbacService: rbacService,
 	}
 }
 
+// //////////////////////////
 func (s *userAccountCacheService) GetOrSetGetDefaultAccount(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
@@ -112,28 +117,34 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 			return nil, err
 		}
 
-		// Fallback: Create user with profile fields and default target account if missing
-		user = &entity.User{
-			BaseEntity: entity.BaseEntity{ID: userID},
-			FirstName:  firstName,
-			LastName:   lastName,
-			Username:   username,
-			UserLang:   entity.Lang(lang),
-		}
-		if err := s.userRepo.Create(ctx, user); err != nil {
-			s.logger.Error(logger.Service, logger.CacheService, "failed to create missing user", map[logger.ExtraKey]interface{}{
-				logger.UserID:       userID,
-				logger.ErrorMessage: err.Error(),
-			})
-			return nil, err
-		}
+		// Fallback: Create user, default target account, and RBAC role atomically in DB Transaction
+		var newAcc *entity.TargetAccount
+		err = s.trxManager.WithTransaction(ctx, func(txCtx context.Context) error {
+			user = &entity.User{
+				BaseEntity: entity.BaseEntity{ID: userID},
+				FirstName:  firstName,
+				LastName:   lastName,
+				Username:   username,
+				UserLang:   entity.Lang(lang),
+			}
+			if err := s.userRepo.Create(txCtx, user); err != nil {
+				return err
+			}
 
-		newAcc := &entity.TargetAccount{
-			OwnerUserID: userID,
-			Enable:      false,
-		}
-		if err := s.accountRepo.Create(ctx, newAcc); err != nil {
-			s.logger.Error(logger.Service, logger.CacheService, "failed to create target account for user", map[logger.ExtraKey]interface{}{
+			newAcc = &entity.TargetAccount{
+				OwnerUserID: userID,
+				Enable:      false,
+			}
+			if err := s.accountRepo.Create(txCtx, newAcc); err != nil {
+				return err
+			}
+
+			_, err := s.rbacService.AddUserRoleForTargetAccount(txCtx, service_contract.MapTokenContextToService(nil), userID, newAcc.ID, string(entity.RoleOwner))
+			return err
+		})
+
+		if err != nil {
+			s.logger.Error(logger.Service, logger.CacheService, "failed to setup missing user in transaction", map[logger.ExtraKey]interface{}{
 				logger.UserID:       userID,
 				logger.ErrorMessage: err.Error(),
 			})
@@ -142,11 +153,6 @@ func (s *userAccountCacheService) SetGetDefaultAccountIfMiss(
 
 		reqAccountID = strconv.FormatInt(newAcc.ID, 10)
 		user.TargetAccounts = []entity.TargetAccount{*newAcc}
-
-		_, err := s.rbacService.AddUserRoleForTargetAccount(ctx, service_contract.MapTokenContextToService(nil), userID, newAcc.ID, string(entity.RoleOwner))
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	if user != nil {
@@ -214,6 +220,10 @@ func (s *userAccountCacheService) Set(ctx context.Context, tokenContext service_
 
 	acc, err := s.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
+		s.logger.Error(logger.Service, logger.CacheService, "failed to get target account for caching", map[logger.ExtraKey]interface{}{
+			logger.TargetAccountID: accountID,
+			logger.ErrorMessage:    err.Error(),
+		})
 		return err
 	}
 
@@ -224,7 +234,7 @@ func (s *userAccountCacheService) Set(ctx context.Context, tokenContext service_
 	}, ttl)
 
 	if err != nil {
-		s.logger.Error(logger.Service, logger.CacheService, "failed to invalidate user account cache", map[logger.ExtraKey]interface{}{
+		s.logger.Error(logger.Service, logger.CacheService, "failed to set user account cache", map[logger.ExtraKey]interface{}{
 			logger.UserID:       userID,
 			logger.ErrorMessage: err.Error(),
 		})

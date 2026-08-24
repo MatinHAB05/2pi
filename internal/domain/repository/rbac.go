@@ -3,22 +3,22 @@ package repository_contract
 import "context"
 
 type RBACRepository interface {
-	EnforceForTargetAccount(userID string, targetAccountID string, action string) (bool, error)
+	EnforceForTargetAccount(ctx context.Context, userID string, targetAccountID string, action string) (bool, error)
 
 	// User-Role Mapping (Grouping Policies - 'g: subject, resource, role')
-	AddUserRoleForTargetAccount(userID string, targetAccountID string, role string) (bool, error)
-	RemoveUserRoleForTargetAccount(userID string, targetAccountID string, role string) (bool, error)
-	GetUserRolesForTargetAccount(userID string, targetAccountID string) ([]UserAccountRoleDTO, error)
-	GetUsersForTargetAccount(targetAccountID string) ([]UserAccountRoleDTO, error)
+	AddUserRoleForTargetAccount(ctx context.Context, userID string, targetAccountID string, role string) (bool, error)
+	RemoveUserRoleForTargetAccount(ctx context.Context, userID string, targetAccountID string, role string) (bool, error)
+	GetUserRolesForTargetAccount(ctx context.Context, userID string, targetAccountID string) ([]UserAccountRoleDTO, error)
+	GetUsersForTargetAccount(ctx context.Context, targetAccountID string) ([]UserAccountRoleDTO, error)
 	GetTargetAccountsForUser(ctx context.Context, userID string) ([]UserAccountRoleDTO, error)
 	GetTargetAccountsForUsers(ctx context.Context, userID []string) ([]UserAccountRoleDTO, error)
 
-	RemoveAllRolesForTargetAccount(targetAccountID string) (bool, error)
-	RemoveAllRolesForUser(userID string) (bool, error)
+	RemoveAllRolesForTargetAccount(ctx context.Context, targetAccountID string) (bool, error)
+	RemoveAllRolesForUser(ctx context.Context, userID string) (bool, error)
 
-	AddPermissionForRole(role string, action string) (bool, error)
-	RemovePermissionForRole(role string, action string) (bool, error)
-	GetPermissionsForRole(role string) ([]RolePermissionDTO, error)
+	AddPermissionForRole(ctx context.Context, role string, action string) (bool, error)
+	RemovePermissionForRole(ctx context.Context, role string, action string) (bool, error)
+	GetPermissionsForRole(ctx context.Context, role string) ([]RolePermissionDTO, error)
 }
 
 type UserAccountRoleDTO struct {

@@ -6,6 +6,7 @@ import (
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	"github.com/MatinHAB05/2pi/pkg/logger"
 )
 
@@ -15,6 +16,7 @@ type userService struct {
 	rbacService          service_contract.RBACService
 	userInfoCacheService service_contract.UserInfoCacheService
 	logger               logger.Logger
+	trxManager           database.TrxManager
 }
 
 func NewUserService(
@@ -23,12 +25,14 @@ func NewUserService(
 	rbacService service_contract.RBACService,
 	log logger.Logger,
 	userInfoCacheService service_contract.UserInfoCacheService,
+	trxManager database.TrxManager,
 ) service_contract.UserService {
 	return &userService{
 		repo:                 repo,
 		rbacService:          rbacService,
 		accountRepo:          accountRepo,
 		logger:               log,
+		trxManager:           trxManager,
 		userInfoCacheService: userInfoCacheService,
 	}
 }
@@ -222,38 +226,6 @@ func (s *userService) GetUserAccountsRolesByIDs(ctx context.Context, tokenContex
 	return res, nil
 }
 
-type UserAccountRoleModelResponse struct {
-	UserID          int64  `json:"user_id"`
-	TargetAccountID int64  `json:"target_account_id"`
-	Role            string `json:"role"`
-}
-type UserResponse struct {
-	ID             int64       `json:"id"`
-	Lang           entity.Lang `json:"lang"`
-	FirstName      string
-	LastName       string
-	Username       string
-	TargetAccounts []*TargetAccountResponse `json:"target_accounts,omitempty"`
-}
-type UserAccountsRoleResponse struct {
-	*UserResponse
-	AccountsRoles []*AccountsRoleResponse `json:",omitempty"`
-}
-
-type AccountsRoleResponse struct {
-	AccountID *TargetAccountResponse
-	Roles     []string
-}
-
-type TargetAccountResponse struct {
-	ID          int64 `json:"id"`
-	OwnerUserID int64 `json:"owner_user_id"`
-	DayDuration int
-	Period      int
-	Description string
-	Enable      bool
-}
-
 // toUserAccountsRoleResponse maps raw role entries for a single user into a structured UserAccountsRoleResponse.
 func (s *userService) toUserAccountsRoleResponse(
 	u []*service_contract.UserAccountRoleModelResponse,
@@ -295,7 +267,7 @@ func (s *userService) toUserAccountsRoleResponse(
 
 			accRole = &service_contract.AccountsRoleResponse{
 				Account: accResp,
-				Roles:     make([]string, 0),
+				Roles:   make([]string, 0),
 			}
 			accountRolesMap[item.TargetAccountID] = accRole
 			accountOrder = append(accountOrder, item.TargetAccountID)

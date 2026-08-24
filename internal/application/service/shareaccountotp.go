@@ -88,27 +88,23 @@ func (s *otpCacheService) GetShareAccountOTP(
 	}, nil
 }
 
+
 func (s *otpCacheService) InvalidateShareAccountOTP(
 	ctx context.Context,
 	tokenContext service_contract.TokenContext,
 	otp string,
 ) error {
-	ex, err := s.cacheRepo.Exists(ctx, otp)
-	if err != nil || ex == nil {
-		s.logger.Error(logger.Service, logger.CacheService, "failed to check otp cache existence", map[logger.ExtraKey]interface{}{
-			logger.ErrorMessage: err.Error(),
-		})
-		return err
-	}
-	if !*ex {
-		return exception.ErrShareAccountAccessOTPCodeNotFound
-	}
-
-	if err := s.cacheRepo.Delete(ctx, otp); err != nil {
+	deleted, err := s.cacheRepo.Delete(ctx, otp)
+	if err != nil {
 		s.logger.Error(logger.Service, logger.CacheService, "failed to invalidate otp cache", map[logger.ExtraKey]interface{}{
 			logger.ErrorMessage: err.Error(),
 		})
 		return err
 	}
+
+	if !deleted {
+		return exception.ErrShareAccountAccessOTPCodeNotFound
+	}
+
 	return nil
 }

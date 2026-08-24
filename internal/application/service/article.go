@@ -6,16 +6,23 @@ import (
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
+	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 )
 
 type articleService struct {
-	repo repository_contract.ArticleRepository
+	repo       repository_contract.ArticleRepository
+	trxManager database.TrxManager
 }
 
-func NewArticleService(repo repository_contract.ArticleRepository) service_contract.ArticleService {
-	return &articleService{repo: repo}
+func NewArticleService(
+	repo repository_contract.ArticleRepository,
+	trxManager database.TrxManager,
+) service_contract.ArticleService {
+	return &articleService{
+		repo:       repo,
+		trxManager: trxManager,
+	}
 }
-
 func (s *articleService) CreateArticle(ctx context.Context, req service_contract.CreateArticleReq) (service_contract.ArticleResponse, error) {
 	article := &entity.Article{
 		Title:       req.Title,
