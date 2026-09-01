@@ -28,7 +28,7 @@ echo ""
 # TODO : Synonyms file
 if ! curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/$INDEX_NAME" > /dev/null; then
   echo "Creating index $INDEX_NAME..."
-  curl -sS -f -X PUT "$ES_URL/$INDEX_NAME" \
+  curl -sS  -X PUT "$ES_URL/$INDEX_NAME" \
     -u "elastic:$ES_PASSWORD" \
     -H "Content-Type: application/json" \
     -d '{
@@ -64,7 +64,7 @@ if ! curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/$INDEX_NAME" > /dev/null; the
             },
             "custom_synonyms": {
               "type": "synonym",
-              "synonyms": []
+              "synonyms_path": "synonyms.txt"
             }
           },
           "analyzer": {
@@ -153,6 +153,7 @@ if ! curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/$INDEX_NAME" > /dev/null; the
         }
       }
     }'
+  
   echo ""
 else
   echo "Index $INDEX_NAME already exists, skipping creation."

@@ -1,0 +1,190 @@
+# ----- Pregnancy & childbirth -----
+pregnancy, gestation, expecting
+# pregnant, expecting, with child
+# prenatal, antenatal
+# postpartum, post-partum, after childbirth, after delivery
+# trimester, stage of pregnancy
+# miscarriage, pregnancy loss, spontaneous abortion
+# stillbirth, fetal death, fetal demise
+# c-section, c section, cesarean, cesarean section, caesarean, caesarean section
+# vaginal birth, vaginal delivery, natural birth
+# labor, labour, childbirth, delivery
+# midwife, midwifery
+# doula, birth doula
+# ob-gyn, obgyn, ob/gyn, ob gyn, obstetrician gynecologist, obstetrician-gynecologist
+# obstetrician, ob doctor
+# preeclampsia, pre-eclampsia, pregnancy induced hypertension
+# gestational diabetes, pregnancy diabetes
+# morning sickness, nausea in pregnancy, pregnancy nausea
+# braxton hicks, false labor
+# postpartum depression, ppd, post-birth depression, baby blues
+# postpartum hemorrhage, pph, bleeding after birth
+# preterm birth, premature birth, premature delivery, preterm labor
+# breastfeeding, nursing, chestfeeding
+# lactation, milk supply
+# pumping, breast pumping, expressing milk
+# fetus, unborn baby, unborn child
+# newborn, infant, baby
+# due date, estimated delivery date, edd
+
+# # ----- Fertility & family planning -----
+# fertility, ability to conceive
+# infertility, trouble conceiving, difficulty conceiving
+# trying to conceive, ttc
+# ivf, in vitro fertilization, in-vitro fertilization
+# iui, intrauterine insemination
+# fertility calculator, ovulation calculator, ovulation calendar
+# ovulation, ovulating
+# egg, ovum, oocyte
+# sperm count, male fertility
+# surrogacy, gestational carrier
+
+# # ----- Menstrual health -----
+# period, menstruation, menstrual cycle, menses
+# pms, premenstrual syndrome
+# pmdd, premenstrual dysphoric disorder
+# menstrual cramps, period cramps, dysmenorrhea
+# heavy periods, menorrhagia, heavy menstrual bleeding
+# irregular periods, irregular menstruation, irregular cycle
+# missed period, late period
+# period tracker, menstrual tracker, cycle tracker
+# period poverty, menstrual poverty
+# tampon, menstrual pad, sanitary pad, sanitary napkin
+# menstrual cup
+# period blood, menstrual blood
+# free bleeding
+# spotting, breakthrough bleeding
+
+# # ----- Menopause -----
+# menopause, change of life
+# perimenopause, peri-menopause
+# premature menopause, early menopause
+# hot flashes, hot flushes, vasomotor symptoms, vms
+# night sweats
+# menopause belly, menopausal weight gain
+# hrt, hormone replacement therapy, hormone therapy
+# vaginal dryness, vaginal atrophy
+
+# # ----- Birth control & contraception -----
+# birth control, contraception, contraceptive
+# iud, intrauterine device
+# the pill, birth control pills, oral contraceptives
+# mini pill, progestin-only pill
+# morning after pill, emergency contraception, plan b
+# condom, barrier method
+# hormonal birth control, hormonal contraception
+# non-hormonal birth control, nonhormonal birth control
+# larc, long-acting reversible contraception
+# otc birth control, over-the-counter birth control
+
+# # ----- Sexual health & STIs -----
+# sti, std, sexually transmitted infection, sexually transmitted disease
+# hiv, human immunodeficiency virus
+# aids, acquired immunodeficiency syndrome
+# hpv, human papillomavirus
+# uti, urinary tract infection
+# yeast infection, vaginal candidiasis
+# bacterial vaginosis, bv
+# vaginal discharge, vaginal secretions
+# libido, sex drive
+# sexual dysfunction
+# prep, pre-exposure prophylaxis
+
+# # ----- Cancer & screenings -----
+# cancer screening, cancer test
+# mammogram, mammography, breast x-ray
+# breast self-exam, bse
+# pap smear, pap test, cervical smear
+# colonoscopy
+# biopsy
+# breast cancer
+# cervical cancer
+# ovarian cancer, silent killer => ovarian cancer
+# prostate cancer
+# colon cancer, colorectal cancer, bowel cancer
+# bladder cancer
+# thyroid cancer
+# chemotherapy, chemo
+# radiation therapy, radiotherapy
+
+# # ----- Vaccines & infectious disease -----
+# vaccine, vaccination, immunization, shot, jab
+# flu shot, influenza vaccine, flu vaccine
+# covid vaccine, covid-19 vaccine, coronavirus vaccine
+# booster shot, booster dose
+# rsv, respiratory syncytial virus
+# covid, covid-19, coronavirus, sars-cov-2
+# pandemic, outbreak
+# mask, face mask, face covering
+# c diff, c. diff, c. difficile, clostridioides difficile
+# shingles, herpes zoster
+# chickenpox, varicella
+
+# # ----- Mental health -----
+# mental health, emotional health, psychological health
+# anxiety, anxiousness
+# depression
+# therapy, counseling, psychotherapy
+# therapist, counselor, counsellor
+# grief, bereavement, mourning
+# stress, chronic stress
+# self-care
+# burnout
+# ptsd, post-traumatic stress disorder
+# schizophrenia
+# social anxiety
+# domestic violence, intimate partner violence, ipv
+
+# # ----- Chronic conditions & body systems -----
+# diabetes, type 2 diabetes
+# high blood pressure, hypertension
+# cholesterol, high cholesterol
+# heart disease, cardiovascular disease, cvd
+# stroke
+# autoimmune disease, autoimmune disorder
+# lupus, systemic lupus erythematosus, sle
+# celiac disease, coeliac disease, gluten intolerance
+# ibs, irritable bowel syndrome
+# sibo, small intestinal bacterial overgrowth
+# endometriosis
+# pcos, polycystic ovary syndrome, polycystic ovarian syndrome
+# fibroids, uterine fibroids
+# pelvic floor, pelvic floor muscles
+# bladder leakage, urinary incontinence
+# hysterectomy
+# osteoporosis, bone density loss, bone loss
+# bmi, body mass index
+# autism
+# gout
+# hepatitis
+# cirrhosis, liver disease
+# sickle cell disease, sickle cell anemia
+
+# # ----- Nutrition & lifestyle -----
+# diet, eating plan, nutrition plan
+# mediterranean diet
+# keto diet, ketogenic diet
+# intermittent fasting
+# protein bar, protein snack
+# supplement, vitamin supplement, dietary supplement
+# probiotics
+# sleep, rest
+# exercise, workout, physical activity, fitness
+# hiit, high-intensity interval training
+# yoga
+
+# # ----- Skin & aging -----
+# sunscreen, sunblock, sun protection, spf
+# botox, botulinum toxin
+# facelift, face lift
+# menopause skin, menopausal skin
+
+# # ----- Healthcare system -----
+# healthcare provider, health care provider, doctor, physician, clinician
+# health insurance, medical insurance
+# aca, affordable care act, obamacare
+# telehealth, telemedicine
+# copay, co-pay
+# out-of-pocket cost, out of pocket cost
+# ER, er, emergency room, emergency department
+# pcp, primary care provider, primary care physician

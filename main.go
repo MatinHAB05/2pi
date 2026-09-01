@@ -226,7 +226,7 @@ func main() {
 		LanguageCode:     "fa",
 	})
 	if cfg.Environment.ModeOptions.ProductionFlag {
-		// botProf, err := os.Open("bot-profile.jpg")
+		// botProf, err := os.Open("./static/bot-profile.jpg")
 		// if err != nil {
 		// 	appLogger.Fatalf("os cant read bot-profile.jpg file")
 		// }
@@ -237,7 +237,7 @@ func main() {
 		// 	},
 		// })
 
-		botProf, err := os.Open("bot-profile.gif")
+		botProf, err := os.Open("./static/bot-profile.gif")
 		if err != nil {
 			appLogger.Fatalf("os cant read bot-profile.gif file")
 		}

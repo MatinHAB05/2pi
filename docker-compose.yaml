@@ -73,6 +73,7 @@ services:
       - "${ES_HOST_PORT:-15018}:9200"
     volumes:
       - es_data:/usr/share/elasticsearch/data
+      - ./setting/synonyms.txt:/usr/share/elasticsearch/config/synonyms.txt:ro
     networks:
       - 2pi_network
     healthcheck:
