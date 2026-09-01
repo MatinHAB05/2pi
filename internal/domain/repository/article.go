@@ -10,4 +10,5 @@ type ArticleRepository interface {
 	Create(ctx context.Context, article *entity.Article) error
 	GetByID(ctx context.Context, id int64) (*entity.Article, error)
 	GetAll(ctx context.Context) ([]entity.Article, error)
+	Exists(ctx context.Context, id int64) (*bool, error)
 }

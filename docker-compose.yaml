@@ -68,7 +68,6 @@ services:
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=false
       - ELASTIC_PASSWORD=${ES_PASSWORD}
-      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "${ES_HOST_PORT:-15018}:9200"
@@ -84,17 +83,24 @@ services:
         ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     env_file:
       - .env
+
   init-es:
     image: curlimages/curl:latest
+    container_name: ${INIT_ES_CONTAINER}
     depends_on:
       elasticsearch:
         condition: service_healthy
+    environment:
+      ES_PASSWORD: ${ES_PASSWORD}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD}
     volumes:
-      - ./scripts/es-init.sh:/es-init.sh
+      - ./scripts/es-init.sh:/es-init.sh:ro
     entrypoint: ["/bin/sh", "/es-init.sh"]
+    networks:
+      - 2pi_network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-8.11.0}
@@ -107,8 +113,8 @@ services:
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      init-es:
+        condition: service_completed_successfully
     networks:
       - 2pi_network
     env_file:

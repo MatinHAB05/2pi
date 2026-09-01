@@ -99,9 +99,9 @@ func main() {
 
 	// scrapper
 	herlifeCfg := scraper.NewHerLifeConfig()
-	herLiferScrap := scraper.NewHerLifeScrapper(&herlifeCfg, cfg.Environment.Redis, appLogger, articleRepo)
+	herLiferScrap := scraper.NewHerLifeScrapper(&herlifeCfg, cfg.Environment.Redis, appLogger, articleRepo, articleESRepo)
 	womanhealtchCfg := scraper.NewHealthyWomenConfig()
-	womanHealthScarp := scraper.NewHealthyWomenScraper(&womanhealtchCfg, cfg.Environment.Redis, appLogger, articleRepo)
+	womanHealthScarp := scraper.NewHealthyWomenScraper(&womanhealtchCfg, cfg.Environment.Redis, appLogger, articleRepo, articleESRepo)
 	scrapers := scraper.NewScrppers([]scraper.Scraper{
 		herLiferScrap,
 		womanHealthScarp,
@@ -118,7 +118,7 @@ func main() {
 	targetaccSrv := service.NewTargetAccountService(targetaccountRepo, appLogger, trxManager)
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger, trxManager, rbacSrv)
 	shareaccountSrv := service.NewShareAccountOTPService(shareccountRepo, appLogger)
-	articleSrv := service.NewArticleService(articleRepo, trxManager)
+	articleSrv := service.NewArticleService(articleRepo, trxManager, articleESRepo, appLogger)
 	articleSearchSrv := service.NewArticleSearchService(articleESRepo, appLogger)
 	ss := router.Services{
 		UserAccountCache: useraccountSrv,
@@ -127,7 +127,7 @@ func main() {
 
 	if cfg.Environment.ModeOptions.SaveJsonScrapperArticles {
 		if err := articleSrv.LoadArticleCache(ctx); err != nil {
-			appLogger.Error(logger.IO, logger.ArticleService, "fail to load artilce cahce", map[logger.ExtraKey]interface{}{
+			appLogger.Fatal(logger.IO, logger.ArticleService, "fail to load artilce cahce", map[logger.ExtraKey]interface{}{
 				logger.ErrorMessage: err.Error(),
 			})
 		}
@@ -197,7 +197,7 @@ func main() {
 			{Command: "settings", Description: "Edit target account details"},
 			{Command: "falang", Description: "Change Language To Farsi"},
 			{Command: "englang", Description: "Change Language To English"},
-			{Command: "scrape", Description: "Update Scrape Articles"},
+			{Command: "webscrap", Description: "Update Web-Scraping Articles"},
 		},
 	})
 

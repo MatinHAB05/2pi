@@ -26,14 +26,20 @@ type SearchArticleQueryRequest struct {
 }
 
 type ArticleESResponse struct {
-	ID          int64     `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	DeletedAt   time.Time `json:"deleted_at"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	ImageURL    string    `json:"image_url"`
-	URL         string    `json:"url"`
+	ID          int64             `json:"id"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+	DeletedAt   time.Time         `json:"deleted_at"`
+	Title       string            `json:"title"`
+	Description string            `json:"description"`
+	ImageURL    string            `json:"image_url"`
+	URL         string            `json:"url"`
+	Highlights  ArticleHighlights `json:"highlights"`
+}
+
+type ArticleHighlights struct {
+	Title       []string `json:"tilte"`
+	Description []string `json:"description"`
 }
 
 type SearchArticleResponse struct {

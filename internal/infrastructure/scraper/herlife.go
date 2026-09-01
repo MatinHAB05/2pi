@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -62,6 +63,7 @@ type herLifeEngine struct {
 	redisCfg config.Redis
 	logger   logger.Logger
 	repo     repository_contract.ArticleRepository
+	esrepo   repository_contract.ArticleESRepository
 }
 
 func NewHerLifeScrapper(
@@ -69,6 +71,7 @@ func NewHerLifeScrapper(
 	redisCfg config.Redis,
 	logger logger.Logger,
 	repo repository_contract.ArticleRepository,
+	esrepo repository_contract.ArticleESRepository,
 ) Scraper {
 	defaults := DefaultHerLifeConfig()
 
@@ -111,6 +114,7 @@ func NewHerLifeScrapper(
 		redisCfg: redisCfg,
 		logger:   logger,
 		repo:     repo,
+		esrepo:   esrepo,
 	}
 }
 
@@ -183,8 +187,24 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 				}
 
 				if err := engine.repo.Create(ctx, dbArticle); err != nil {
-					engine.logger.Errorf("[Worker %d] failed to save article [%s]: %v", workerID, art.URL, err)
+					engine.logger.Errorf("[Worker %d] failed to save article in db [%s]: %v", workerID, art.URL, err)
 				}
+
+				esdbArticle := &repository_contract.ArticleDocument{
+					ID:          strconv.FormatInt(dbArticle.ID, 10),
+					CreatedAt:   dbArticle.CreatedAt,
+					UpdatedAt:   dbArticle.UpdatedAt,
+					DeletedAt:   dbArticle.DeletedAt.Time,
+					Title:       dbArticle.Title,
+					Description: dbArticle.Description,
+					ImageURL:    dbArticle.ImageURL,
+					URL:         dbArticle.URL,
+				}
+
+				if _, err := engine.esrepo.Index(ctx, esdbArticle); err != nil {
+					engine.logger.Errorf("[Worker %d] failed to index article in es-db [%s]: %v", workerID, art.URL, err)
+				}
+
 			}
 		}(i)
 	}
@@ -209,7 +229,7 @@ func (engine *herLifeEngine) herlife(ctx context.Context, scrapDataMu *sync.Mute
 		}
 	})
 
-	if err := categoryCollector.Visit(engine.cfg.BlogStartURL); err != nil {
+	if err := categoryCollector.Visit(engine.cfg.BlogStartURL); err != nil && !errors.Is(err, colly.ErrAlreadyVisited) {
 		engine.logger.Errorf("failed to visit initial category page: %v", err)
 		close(articleQueue)
 		return err

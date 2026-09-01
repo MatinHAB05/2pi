@@ -9,6 +9,7 @@ import (
 	repository_contract "github.com/MatinHAB05/2pi/internal/domain/repository"
 	"github.com/MatinHAB05/2pi/internal/infrastructure/database"
 	dsl "github.com/elastic/go-elasticsearch/v9/typedapi/esdsl"
+	"github.com/elastic/go-elasticsearch/v9/typedapi/types"
 )
 
 type articleESTypedRepository struct {
@@ -74,6 +75,20 @@ func (r *articleESTypedRepository) Search(ctx context.Context, keyword string, p
 				dsl.NewMatchQuery("description.fuzzy", keyword).Fuzziness(dsl.NewFuzziness().String(fuzziness)).Boost(boost0_5),
 			),
 		)).
+		Highlight(dsl.NewHighlight().Fields([]map[string]types.HighlightField{
+			{
+				"title": {},
+			},
+			{
+				"description": {},
+			},
+			{
+				"title.fuzzy": {},
+			},
+			{
+				"description.fuzzy": {},
+			},
+		})).
 		Do(ctx)
 
 	if err != nil {
@@ -86,6 +101,10 @@ func (r *articleESTypedRepository) Search(ctx context.Context, keyword string, p
 		if err := json.Unmarshal(res.Hits.Hits[i].Source_, &doc); err != nil {
 			return nil, fmt.Errorf("%w [index=%d]: %v", exception.ErrUnmarshalFailed, i, err)
 		}
+		doc.Highlights = repository_contract.ArticleHighlights{
+			Title:       append(res.Hits.Hits[i].Highlight["title"], res.Hits.Hits[i].Highlight["title.fuzzy"]...),
+			Description: append(res.Hits.Hits[i].Highlight["description"], res.Hits.Hits[i].Highlight["description.fuzzy"]...),
+		}
 		articles = append(articles, &doc)
 	}
 
@@ -93,4 +112,12 @@ func (r *articleESTypedRepository) Search(ctx context.Context, keyword string, p
 		Articles: articles,
 		Total:    len(res.Hits.Hits),
 	}, nil
+}
+
+func (r *articleESTypedRepository) Exists(ctx context.Context, id string) (*bool, error) {
+	res, err := r.client.GetClient().Exists(r.aliasName, id).Do(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%w [id=%s]: %v", exception.ErrSearchFailed, id, err)
+	}
+	return &res, nil
 }

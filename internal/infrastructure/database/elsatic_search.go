@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/MatinHAB05/2pi/config"
 	"github.com/MatinHAB05/2pi/pkg/logger"
@@ -33,11 +36,20 @@ func NewTypedElasticSearchDatabase(elasticConfig *config.ElasticSearchConfig, el
 	elasticOnce.Do(func() {
 		ctx := context.Background()
 
+		loc, err := time.LoadLocation("Asia/Tehran")
+		if err != nil {
+			loc = time.Local
+		}
+		timeStamp := time.Now().In(loc).Format("2006-01-02-15-04-05")
+		fileName := fmt.Sprintf("%s%s-%s.log", elasticConfig.LogFilePath, timeStamp, uuid.New().String())
+		file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+
 		client, err := elasticsearch.NewTyped(
-			elasticsearch.WithAddresses(fmt.Sprintf("http://%s:%s", elasticConfig.Host, elasticConfig.Port)),
+			elasticsearch.WithAddresses(fmt.Sprintf("http://%s:%d", elasticConfig.Host, elasticConfig.Port)),
 			elasticsearch.WithLogger(&elastictransport.ColorLogger{ //TODO
-				Output:            os.Stdout,
-				EnableRequestBody: true,
+				Output:             file,
+				EnableRequestBody:  true,
+				EnableResponseBody: true,
 			}),
 			// elastictransport.WithLeveledLogger(NewElasticLoggerAdapter(applogger)), // مسخره بازی - این برای newclient یا new هست که اون تایپی نیست
 			elasticsearch.WithBasicAuth("elastic", elasticConfig.Password),

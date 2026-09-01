@@ -52,10 +52,10 @@ func (h *AdminHandler) UpdateArticles(ctx context.Context, b *bot.Bot, update *m
 
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   "Scrape Stared...",
+		Text:   "Web-Scraping Stared...",
 	})
 	if err != nil {
-		h.logger.Error(logger.Handler, logger.Telegram, "failed to send stared scrape article updates ", map[logger.ExtraKey]interface{}{
+		h.logger.Error(logger.Handler, logger.Telegram, "failed to send stared web-scraping article updates ", map[logger.ExtraKey]interface{}{
 			logger.UserID:       authToken.UserId,
 			logger.ErrorMessage: err.Error(),
 		})

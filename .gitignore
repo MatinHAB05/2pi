@@ -34,6 +34,7 @@ go.work.sum
 # logs
 logs/app/*
 logs/telegram/*
+logs/elastic/*
 
 # 
 matin_notes.txt

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
 	"github.com/go-telegram/bot/models"
@@ -20,7 +21,18 @@ func MapArticleToInlineResult(id string, article *service_contract.ArticleESResp
 		description = "برای مطالعه مقاله روی دکمه زیر کلیک کنید."
 	}
 
-	messageText := fmt.Sprintf("<a href=\"%s\"><b>%s</b></a>\n\n%s", article.URL, article.Title, description)
+	artil := strings.Join(article.Highlights.Title, "")
+	if artil == "" {
+		artil = article.Title
+	}
+	artdes := strings.Join(article.Highlights.Description, "")
+	if artdes == "" {
+		artdes = article.Description
+	}
+
+	// messageText := fmt.Sprintf("<a href=\"%s\"><b>%s</b></a>\n\n%s", article.URL, article.Title, description)
+
+	messageText := fmt.Sprintf("<a href=\"%s\"><b>%s</b></a>\n\n%s", article.URL, artil, artdes)
 
 	return &models.InlineQueryResultArticle{
 		ID:           id,

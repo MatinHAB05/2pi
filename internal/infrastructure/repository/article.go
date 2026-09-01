@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/MatinHAB05/2pi/internal/domain/entity"
 	"github.com/MatinHAB05/2pi/internal/domain/exception"
@@ -45,4 +46,19 @@ func (r *articleRepository) GetAll(ctx context.Context) ([]entity.Article, error
 	db := database.ExtractTrxOrDB(ctx, r.db)
 	result := db.GetDB().WithContext(ctx).Find(&articles)
 	return articles, result.Error
+}
+
+func (r *articleRepository) Exists(ctx context.Context, id int64) (*bool, error) {
+	var count int64
+	db := database.ExtractTrxOrDB(ctx, r.db)
+	err := db.GetDB().WithContext(ctx).
+		Model(&entity.Article{}).
+		Where("id = ?", id).
+		Count(&count).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to check article existence by ID %d: %w", id, err)
+	}
+	ex := count > 0
+	return &ex, nil
 }

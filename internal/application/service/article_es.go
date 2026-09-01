@@ -96,6 +96,11 @@ func (s *articleSearchService) SearchArticles(ctx context.Context, req *service_
 			Description: doc.Description,
 			ImageURL:    doc.ImageURL,
 			URL:         doc.URL,
+			DeletedAt:   doc.DeletedAt,
+			Highlights: service_contract.ArticleHighlights{
+				Title:       doc.Highlights.Title,
+				Description: doc.Highlights.Description,
+			},
 		})
 	}
 

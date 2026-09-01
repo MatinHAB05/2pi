@@ -17,7 +17,7 @@ func BasicRouter(b *bot.Bot, handlers *Handlers, services *Services, repos *Repo
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "💛 Support Us", bot.MatchTypeExact, handlers.Basic.SupportUs, bot.Middleware(middlewares.Authentication), bot.Middleware(middlewares.Info), bot.Middleware(middlewares.ClearState))
 
-	b.RegisterHandlerMatchFunc(func(u *models.Update) bool { return u.InlineQuery != nil }, handlers.Basic.ArticleSearchInlineQuery, bot.Middleware(middlewares.ClearState))
+	b.RegisterHandlerMatchFunc(func(u *models.Update) bool { return u.InlineQuery != nil }, handlers.Basic.ArticleSearchInlineQuery)
 
 	return b
 }

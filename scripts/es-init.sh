@@ -2,20 +2,34 @@
 set -e
 
 ES_URL=${ES_URL:-"http://elasticsearch:9200"}
+ES_PASSWORD=${ES_PASSWORD:?ES_PASSWORD is required}
+KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:?KIBANA_SYSTEM_PASSWORD is required}
+
 INDEX_NAME="articles-v1"
 ALIAS_NAME="articles"
 
 echo "Waiting for Elasticsearch..."
-until curl -s "$ES_URL/_cat/health?h=status" | grep -qE 'green|yellow'; do
+until curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/_cat/health?h=status" | grep -qE 'green|yellow'; do
   sleep 2
 done
 
 echo "Elasticsearch is up!"
 
-# 1. Create Index with Settings & Mappings (if not exists)
-if ! curl -s -f "$ES_URL/$INDEX_NAME" > /dev/null; then
+# 1. Configure kibana_system password
+echo "Setting kibana_system password..."
+curl -sS -f -X POST "$ES_URL/_security/user/kibana_system/_password" \
+  -u "elastic:$ES_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}"
+echo "kibana_system password configured successfully."
+echo ""
+
+# 2. Create Index with Settings & Mappings (if not exists)
+# TODO : Synonyms file
+if ! curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/$INDEX_NAME" > /dev/null; then
   echo "Creating index $INDEX_NAME..."
-  curl -X PUT "$ES_URL/$INDEX_NAME" \
+  curl -sS -f -X PUT "$ES_URL/$INDEX_NAME" \
+    -u "elastic:$ES_PASSWORD" \
     -H "Content-Type: application/json" \
     -d '{
       "settings": {
@@ -98,6 +112,9 @@ if ! curl -s -f "$ES_URL/$INDEX_NAME" > /dev/null; then
           "created_at": {
             "type": "date"
           },
+          "deleted_at": {
+            "type": "date"
+          },
           "updated_at": {
             "type": "date"
           },
@@ -141,9 +158,10 @@ else
   echo "Index $INDEX_NAME already exists, skipping creation."
 fi
 
-# 2. Setup Alias
+# 3. Setup Alias
 echo "Ensuring alias $ALIAS_NAME points to $INDEX_NAME..."
-curl -X POST "$ES_URL/_aliases" \
+curl -sS -f -X POST "$ES_URL/_aliases" \
+  -u "elastic:$ES_PASSWORD" \
   -H "Content-Type: application/json" \
   -d '{
     "actions": [

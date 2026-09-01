@@ -71,9 +71,10 @@ type EmailConfig struct {
 }
 
 type ElasticSearchConfig struct {
-	Host     string `mapstructure:"ES_HOST"      json:"host"`
-	Port     int    `mapstructure:"ES_PORT"      json:"port"`
-	Password string `mapstructure:"ES_PASSWORD"  json:"password"`
+	Host        string `mapstructure:"ES_HOST"      json:"host"`
+	Port        int    `mapstructure:"ES_PORT"      json:"port"`
+	Password    string `mapstructure:"ES_PASSWORD"  json:"password"`
+	LogFilePath string `mapstructure:"ES_LOG_PATH"  json:"log_path"`
 }
 
 func NewEnvironment() *Environment {
