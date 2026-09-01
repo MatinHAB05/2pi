@@ -59,6 +59,7 @@ func main() {
 	// --- DATABASES CONNECTIONS ---
 	pgDB := database.NewPostgresDatabase(&cfg.Environment.DataBase, &cfg.Constant.Database)
 	redisClient := database.NewRedisDatabase(&cfg.Environment.Redis, &cfg.Constant.Redis)
+	typedESClient := database.NewTypedElasticSearchDatabase(&cfg.Environment.ElasticSearchConfig, &cfg.Constant.Elastic, appLogger)
 
 	// --- STATICS ---
 	// statics, err := static.InitStaticFiles()
@@ -87,6 +88,7 @@ func main() {
 	useracccahceRepo := repository.NewUserAccountCacheRepository(redisClient)
 	shareccountRepo := repository.NewShareAccountOTPCacheRepository(redisClient)
 	articleRepo := repository.NewArticleRepository(pgDB)
+	articleESRepo := repository.NewArticleESTypedRepository(typedESClient)
 	rs := router.Repos{
 		UserAccCache: useracccahceRepo,
 	}
@@ -117,18 +119,28 @@ func main() {
 	useraccountSrv := service.NewUserAccountCacheService(useracccahceRepo, userRepo, targetaccountRepo, appLogger, trxManager, rbacSrv)
 	shareaccountSrv := service.NewShareAccountOTPService(shareccountRepo, appLogger)
 	articleSrv := service.NewArticleService(articleRepo, trxManager)
+	articleSearchSrv := service.NewArticleSearchService(articleESRepo, appLogger)
 	ss := router.Services{
 		UserAccountCache: useraccountSrv,
 		UserInfoCache:    userinfoSrv,
+	}
+
+	if cfg.Environment.ModeOptions.SaveJsonScrapperArticles {
+		if err := articleSrv.LoadArticleCache(ctx); err != nil {
+			appLogger.Error(logger.IO, logger.ArticleService, "fail to load artilce cahce", map[logger.ExtraKey]interface{}{
+				logger.ErrorMessage: err.Error(),
+			})
+		}
+
 	}
 
 	// register handlers
 	commonHandler := common.NewCommonHandler(appLogger)
 	accountHandler := handler.NewAccountHandler(userSrv, targetaccSrv, rbacSrv, useraccountSrv, appLogger, &commonHandler)
 	rbacHandler := handler.NewRBACHandler(userSrv, targetaccSrv, rbacSrv, appLogger, &commonHandler, randomSrv, shareaccountSrv)
-	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &rbacHandler, &commonHandler, appLogger, articleSrv)
+	basicHandler := handler.NewBasicHandler(userSrv, targetaccSrv, &accountHandler, &rbacHandler, &commonHandler, appLogger, articleSrv, articleSearchSrv)
 	userHandler := handler.NewUserHandler(userSrv, appLogger, &commonHandler)
-	adminHandler := handler.NewAdminHandler(scrapers, appLogger, commonHandler)
+	adminHandler := handler.NewAdminHandler(scrapers, appLogger, &commonHandler, &cfg.Environment.ModeOptions, articleSrv)
 	hs := router.Handlers{
 		Basic:   basicHandler,
 		Account: accountHandler,

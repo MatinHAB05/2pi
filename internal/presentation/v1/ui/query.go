@@ -8,7 +8,7 @@ import (
 )
 
 // Map single Article to InlineQueryResultArticle
-func MapArticleToInlineResult(id string, article service_contract.ArticleResponse) models.InlineQueryResult {
+func MapArticleToInlineResult(id string, article *service_contract.ArticleESResponse) models.InlineQueryResult {
 	// Fallback values if fields are empty
 	imageURL := article.ImageURL
 	if imageURL == "" {
@@ -45,12 +45,12 @@ func MapArticleToInlineResult(id string, article service_contract.ArticleRespons
 }
 
 // Map slice of Articles to []models.InlineQueryResult
-func MapArticlesToInlineResults(articles []service_contract.ArticleResponse) []models.InlineQueryResult {
+func MapArticlesToInlineResults(articles []*service_contract.ArticleESResponse) []models.InlineQueryResult {
 	results := make([]models.InlineQueryResult, 0, len(articles))
 
-	for i, article := range articles {
+	for i := range articles {
 		id := fmt.Sprintf("article_%d", i)
-		results = append(results, MapArticleToInlineResult(id, article))
+		results = append(results, MapArticleToInlineResult(id, articles[i]))
 	}
 
 	return results

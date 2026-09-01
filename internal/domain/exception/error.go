@@ -16,4 +16,8 @@ var (
 	ErrInvalidUserIDType                 = errors.New("user_id in context has invalid type")
 	ErrLangNotFound                      = errors.New("lang not found in context")
 	ErrArticleNotFound                   = errors.New("article not found")
+	ErrIndexFailed                       = errors.New("elasticsearch: failed to index document")
+	ErrDeleteFailed                      = errors.New("elasticsearch: failed to delete document")
+	ErrSearchFailed                      = errors.New("elasticsearch: failed to execute search query")
+	ErrUnmarshalFailed                   = errors.New("elasticsearch: failed to unmarshal hit source document")
 )

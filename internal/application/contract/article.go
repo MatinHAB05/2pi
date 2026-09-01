@@ -10,6 +10,8 @@ type ArticleService interface {
 	CreateArticle(ctx context.Context, req CreateArticleReq) (ArticleResponse, error)
 	GetArticle(ctx context.Context, id int64) (ArticleResponse, error)
 	ListArticles(ctx context.Context) ([]ArticleResponse, error)
+	UpdateOrCreateCache(ctx context.Context) error
+	LoadArticleCache(ctx context.Context) error
 }
 type CreateArticleReq struct {
 	Title       string `json:"title" validate:"required"`
@@ -18,7 +20,6 @@ type CreateArticleReq struct {
 	URL         string `json:"url" validate:"required,url"`
 }
 
-// ArticleRes represents the payload returned to the client
 type ArticleResponse struct {
 	ID          int64  `json:"id"`
 	Title       string `json:"title"`

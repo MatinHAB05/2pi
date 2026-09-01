@@ -27,6 +27,8 @@ const (
 	Telegram        SubCategory = "Telegram"
 	Scrap           SubCategory = "Scrap"
 	CacheService    SubCategory = "Cache Service"
+	ArticleService  SubCategory = "Article Service"
+
 	// General
 	Startup SubCategory = "Startup"
 

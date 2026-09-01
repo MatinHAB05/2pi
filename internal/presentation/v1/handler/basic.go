@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	service_contract "github.com/MatinHAB05/2pi/internal/application/contract"
@@ -18,9 +17,10 @@ import (
 var UserStates = make(map[int64]map[string]any)
 
 type BasicHandler struct {
-	userService    service_contract.UserService
-	accountService service_contract.TargetAccountService
-	articleService service_contract.ArticleService
+	userService          service_contract.UserService
+	accountService       service_contract.TargetAccountService
+	articleService       service_contract.ArticleService
+	articleSearchService service_contract.ArticleSearchService
 
 	rbacHandler    *RBACHandler
 	accountHandler *AccountHandler
@@ -36,15 +36,17 @@ func NewBasicHandler(
 	commonHandler *common.CommonHandler,
 	logger logger.Logger,
 	articleService service_contract.ArticleService,
+	articleSearchService service_contract.ArticleSearchService,
 ) BasicHandler {
 	return BasicHandler{
-		userService:    userService,
-		logger:         logger,
-		accountHandler: accountHandler,
-		accountService: accountService,
-		commonHandler:  commonHandler,
-		rbacHandler:    rbacHandler,
-		articleService: articleService,
+		userService:          userService,
+		logger:               logger,
+		accountHandler:       accountHandler,
+		accountService:       accountService,
+		commonHandler:        commonHandler,
+		rbacHandler:          rbacHandler,
+		articleService:       articleService,
+		articleSearchService: articleSearchService,
 	}
 }
 
@@ -52,26 +54,6 @@ func (h *BasicHandler) NotFound(ctx context.Context, b *bot.Bot, update *models.
 	userID := helper.GetUserIDFromUpdate(update)
 	chatID := helper.GetChatID(update)
 
-	// inline-query scenario
-	if update.InlineQuery != nil {
-		// query := update.InlineQuery.Query
-		//for now
-		ScrapData, err := h.articleService.ListArticles(ctx)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		_, err = b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{
-			InlineQueryID: update.InlineQuery.ID,
-			Results:       ui.MapArticlesToInlineResults(ScrapData[:min(len(ScrapData), 10)]),
-			CacheTime:     0, //todo : for debug!
-		})
-
-		if err != nil {
-			fmt.Println("Error answering inline query:", err)
-		}
-		return
-	}
 	// inline-query-resault scenario
 	if update.ChosenInlineResult != nil {
 		rawResID := update.ChosenInlineResult.ResultID
@@ -197,4 +179,35 @@ func (h *BasicHandler) SupportUs(ctx context.Context, b *bot.Bot, update *models
 		return
 	}
 
+}
+
+func (h *BasicHandler) ArticleSearchInlineQuery(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.InlineQuery != nil { // safty
+		query := update.InlineQuery.Query
+		if query == "" {
+			return // todo : top visited artilcles!
+		}
+		arts, err := h.articleSearchService.SearchArticles(ctx, &service_contract.SearchArticleQueryRequest{
+			Keyword: query,
+			Page:    1,
+			Size:    15,
+		})
+		if err != nil {
+			h.logger.Error(logger.Handler, logger.ArticleService, "failed search in articles with es", map[logger.ExtraKey]interface{}{
+				logger.ErrorMessage: err.Error(),
+				"query":             query,
+			})
+			return
+		}
+		_, err = b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{
+			InlineQueryID: update.InlineQuery.ID,
+			Results:       ui.MapArticlesToInlineResults(arts.Articles),
+			CacheTime:     0, //todo : for debug!
+		})
+
+		if err != nil {
+			fmt.Println("Error answering inline query:", err)
+		}
+		return
+	}
 }

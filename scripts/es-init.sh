@@ -1,0 +1,160 @@
+#!/bin/sh
+set -e
+
+ES_URL=${ES_URL:-"http://elasticsearch:9200"}
+INDEX_NAME="articles-v1"
+ALIAS_NAME="articles"
+
+echo "Waiting for Elasticsearch..."
+until curl -s "$ES_URL/_cat/health?h=status" | grep -qE 'green|yellow'; do
+  sleep 2
+done
+
+echo "Elasticsearch is up!"
+
+# 1. Create Index with Settings & Mappings (if not exists)
+if ! curl -s -f "$ES_URL/$INDEX_NAME" > /dev/null; then
+  echo "Creating index $INDEX_NAME..."
+  curl -X PUT "$ES_URL/$INDEX_NAME" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0,
+        "index.mapping.coerce": false,
+        "analysis": {
+          "char_filter": {
+            "zero_width_spaces": {
+              "type": "mapping",
+              "mappings": [
+                "\\u200C=>\\u0020"
+              ]
+            }
+          },
+          "filter": {
+            "persian_stop": {
+              "type": "stop",
+              "stopwords": "_persian_"
+            },
+            "english_stop": {
+              "type": "stop",
+              "stopwords": "_english_"
+            },
+            "english_stemmer": {
+              "type": "stemmer",
+              "language": "english"
+            },
+            "english_possessive_stemmer": {
+              "type": "stemmer",
+              "language": "possessive_english"
+            },
+            "custom_synonyms": {
+              "type": "synonym",
+              "synonyms": []
+            }
+          },
+          "analyzer": {
+            "fa_en_analyzer": {
+              "type": "custom",
+              "tokenizer": "standard",
+              "char_filter": [
+                "zero_width_spaces"
+              ],
+              "filter": [
+                "english_possessive_stemmer",
+                "lowercase",
+                "decimal_digit",
+                "arabic_normalization",
+                "persian_normalization",
+                "persian_stop",
+                "english_stop",
+                "custom_synonyms",
+                "persian_stem",
+                "english_stemmer"
+              ]
+            },
+            "fa_en_fuzzy_analyzer": {
+              "type": "custom",
+              "tokenizer": "standard",
+              "char_filter": [
+                "zero_width_spaces"
+              ],
+              "filter": [
+                "lowercase",
+                "decimal_digit",
+                "arabic_normalization",
+                "persian_normalization"
+              ]
+            }
+          }
+        }
+      },
+      "mappings": {
+        "dynamic": "strict",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "created_at": {
+            "type": "date"
+          },
+          "updated_at": {
+            "type": "date"
+          },
+          "title": {
+            "type": "text",
+            "analyzer": "fa_en_analyzer",
+            "fields": {
+              "fuzzy": {
+                "type": "text",
+                "analyzer": "fa_en_fuzzy_analyzer"
+              },
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "description": {
+            "type": "text",
+            "analyzer": "fa_en_analyzer",
+            "fields": {
+              "fuzzy": {
+                "type": "text",
+                "analyzer": "fa_en_fuzzy_analyzer"
+              }
+            }
+          },
+          "image_url": {
+            "type": "keyword",
+            "index": false
+          },
+          "url": {
+            "type": "keyword",
+            "index": false
+          }
+        }
+      }
+    }'
+  echo ""
+else
+  echo "Index $INDEX_NAME already exists, skipping creation."
+fi
+
+# 2. Setup Alias
+echo "Ensuring alias $ALIAS_NAME points to $INDEX_NAME..."
+curl -X POST "$ES_URL/_aliases" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "actions": [
+      {
+        "add": {
+          "index": "'"$INDEX_NAME"'",
+          "alias": "'"$ALIAS_NAME"'"
+        }
+      }
+    ]
+  }'
+echo ""
+
+echo "Elasticsearch setup completed successfully!"

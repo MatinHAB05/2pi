@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${PDB_USER}
       POSTGRES_PASSWORD: ${PDB_PASSWORD}
       POSTGRES_DB: ${PDB_DB_NAME}
-      TZ: ${PDB_TZ}
+      TZ: ${PDB_TZ:-UTC}
     ports:
       - "${POSTGRES_HOST_PORT:-15015}:5432"
     volumes:
@@ -59,10 +59,66 @@ services:
   #   env_file:
   #     - .env
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-8.11.0}
+    container_name: ${ES_CONTAINER:-2pi_elasticsearch}
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ES_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "${ES_HOST_PORT:-15018}:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - 2pi_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -u elastic:${ES_PASSWORD} -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
+  init-es:
+    image: curlimages/curl:latest
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./scripts/es-init.sh:/es-init.sh
+    entrypoint: ["/bin/sh", "/es-init.sh"]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-8.11.0}
+    container_name: ${KIBANA_CONTAINER:-2pi_kibana}
+    restart: always
+    ports:
+      - "${KIBANA_HOST_PORT:-15019}:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - 2pi_network
+    env_file:
+      - .env
+
 volumes:
   pgdata:
   redisdata:
   # pgadmin_data:
+  es_data:
 
 networks:
   2pi_network:

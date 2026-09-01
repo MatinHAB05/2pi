@@ -8,14 +8,15 @@ import (
 )
 
 type Environment struct {
-	Admin       AdminConfig  `mapstructure:",squash"`
-	BotToken    BotToken     `mapstructure:",squash"`
-	ModeOptions ModeOptions  `mapstructure:",squash" json:"mode_options"`
-	DataBase    DataBase     `mapstructure:",squash" json:"database"`
-	Redis       Redis        `mapstructure:",squash" json:"redis"`
-	Logger      LoggerConfig `mapstructure:",squash" json:"logger"`
-	Casbin      Casbin       `mapstructure:",squash" json:"casbin"`
-	Email       EmailConfig  `mapstructure:",squash" json:"email"`
+	Admin               AdminConfig         `mapstructure:",squash"`
+	BotToken            BotToken            `mapstructure:",squash"`
+	ModeOptions         ModeOptions         `mapstructure:",squash" json:"mode_options"`
+	DataBase            DataBase            `mapstructure:",squash" json:"database"`
+	Redis               Redis               `mapstructure:",squash" json:"redis"`
+	Logger              LoggerConfig        `mapstructure:",squash" json:"logger"`
+	Casbin              Casbin              `mapstructure:",squash" json:"casbin"`
+	Email               EmailConfig         `mapstructure:",squash" json:"email"`
+	ElasticSearchConfig ElasticSearchConfig `mapstructure:",squash" json:"elastic"`
 }
 type AdminConfig struct {
 	UserID    int64  `mapstructure:"ADMIN_USER_ID" json:"admin_user_id"`
@@ -29,9 +30,10 @@ type BotToken struct {
 }
 
 type ModeOptions struct {
-	Debug               bool `mapstructure:"DEBUG_FLAG" json:"debug_flag"`
-	ProductionFlag      bool `mapstructure:"PRODUCTION_FLAG" json:"production_flag"`
-	DebugRBACMiddelware bool `mapstructure:"DEBUG_RBAC" json:"debug_rbac_middle"`
+	Debug                    bool `mapstructure:"DEBUG_FLAG" json:"debug_flag"`
+	ProductionFlag           bool `mapstructure:"PRODUCTION_FLAG" json:"production_flag"`
+	DebugRBACMiddelware      bool `mapstructure:"DEBUG_RBAC" json:"debug_rbac_middle"`
+	SaveJsonScrapperArticles bool `mapstructure:"SAVE_JSON_SCRAPPER_ARTICLES" json:"save_json_scrapper_articles"`
 }
 
 type DataBase struct {
@@ -66,6 +68,12 @@ type EmailConfig struct {
 	TwoPiEmailAppPassword string `mapstructure:"TWO_PI_EMAIL_APP_PASSWORD" json:"2pi_email_app_password"`
 	SMTPHost              string `mapstructure:"SMTP_HOST"                        json:"smtp_host"`
 	SMTPPort              string `mapstructure:"SMTP_HOST_PORT"                   json:"smtp_host_port"`
+}
+
+type ElasticSearchConfig struct {
+	Host     string `mapstructure:"ES_HOST"      json:"host"`
+	Port     int    `mapstructure:"ES_PORT"      json:"port"`
+	Password string `mapstructure:"ES_PASSWORD"  json:"password"`
 }
 
 func NewEnvironment() *Environment {

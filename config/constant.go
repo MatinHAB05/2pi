@@ -7,8 +7,9 @@ import (
 )
 
 type Constant struct {
-	Database DBConst    `json:"database"`
-	Redis    RedisConst `json:"redis"`
+	Database DBConst      `json:"database"`
+	Redis    RedisConst   `json:"redis"`
+	Elastic  ElasticConst `json:"elsastic"`
 }
 
 type DBConst struct {
@@ -20,7 +21,8 @@ type DBConst struct {
 type RedisConst struct {
 }
 
-
+type ElasticConst struct {
+}
 
 func NewConstant() *Constant {
 	return &Constant{
