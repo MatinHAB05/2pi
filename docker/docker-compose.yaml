@@ -74,10 +74,13 @@ services:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD}
       ELASTIC_URL: "http://elasticsearch:9200"
     volumes:
-      - ./../scripts/es-init.sh:/es-init.sh:ro
-      - ./../scripts/app-template.sh:/app-template.sh:ro
-      - ./../scripts/tel-template.sh:/tel-template.sh:ro
-    entrypoint: ["/bin/sh", "-c", "/app-template.sh && /tel-template.sh && /es-init.sh"]
+      - ./../scripts/elastic:/scripts:ro
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        "/scripts/app-template-es.sh && /scripts/tel-template-es.sh && /scripts/article-es.sh && /scripts/es-init.sh",
+      ]
     networks:
       - 2pi_network
 
@@ -99,6 +102,27 @@ services:
     depends_on:
       init-es:
         condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'curl -s http://localhost:5601/api/status | grep -q ''"level":"available"'' || exit 1',
+        ]
+    networks:
+      - 2pi_network
+
+  init-kibana:
+    image: curlimages/curl:latest
+    container_name: ${IMPORT_KIBANA_CONTAINER:-2pi_import_kibana}
+    depends_on:
+      kibana:
+        condition: service_healthy
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      KIBANA_URL: "http://kibana:5601"
+    volumes:
+      - ./../scripts/kibana:/scripts:ro
+    entrypoint: ["/bin/sh", "-c", "/scripts/kibana-import.sh"]
     networks:
       - 2pi_network
 
