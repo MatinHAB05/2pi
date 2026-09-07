@@ -71,23 +71,23 @@ func (l *zeroLogger) Init() {
 
 		writers := []io.Writer{os.Stdout}
 
-		if l.cfg.CleanMode {
-			fileName := fmt.Sprintf("%s%s-%s_clean.log", l.cfg.FilePath, timeStamp, uuid.New().String()[:4])
+		if l.cfg.CleanMode { // for cases that kibana is stopped(ram limitaion :( )
+			fileName := fmt.Sprintf("%s%s-%s_clean.log", l.cfg.CleanFilePath, timeStamp, uuid.New().String()[:4])
 			file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 			if err != nil {
 				fmt.Printf("Error opening log file: %v\n", err)
 				panic("could not open log file")
 			}
 			writers = append(writers, indentedWriter{out: file})
-		} else {
-			fileName := fmt.Sprintf("%s%s-%s.log", l.cfg.FilePath, timeStamp, uuid.New().String())
-			file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-			if err != nil {
-				fmt.Printf("Error opening log file: %v\n", err)
-				panic("could not open log file")
-			}
-			writers = append(writers, file)
 		}
+
+		fileName := fmt.Sprintf("%s%s-%s.log", l.cfg.FilePath, timeStamp, uuid.New().String())
+		file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		if err != nil {
+			fmt.Printf("Error opening log file: %v\n", err)
+			panic("could not open log file")
+		}
+		writers = append(writers, file)
 
 		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
@@ -111,7 +111,7 @@ func (l *zeroLogger) Debug(cat Category, sub SubCategory, msg string, extra map[
 		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
-		Fields(logParamsToZeroParams(extra)).
+		Interface("extra", logParamsToZeroParams(extra)).
 		Msg(msg)
 }
 
@@ -128,7 +128,7 @@ func (l *zeroLogger) Info(cat Category, sub SubCategory, msg string, extra map[E
 		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
-		Fields(logParamsToZeroParams(extra)).
+		Interface("extra", logParamsToZeroParams(extra)).
 		Msg(msg)
 }
 
@@ -145,7 +145,7 @@ func (l *zeroLogger) Warn(cat Category, sub SubCategory, msg string, extra map[E
 		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
-		Fields(logParamsToZeroParams(extra)).
+		Interface("extra", logParamsToZeroParams(extra)).
 		Msg(msg)
 }
 
@@ -162,7 +162,7 @@ func (l *zeroLogger) Error(cat Category, sub SubCategory, msg string, extra map[
 		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
-		Fields(logParamsToZeroParams(extra)).
+		Interface("extra", logParamsToZeroParams(extra)).
 		Msg(msg)
 }
 
@@ -179,7 +179,7 @@ func (l *zeroLogger) Fatal(cat Category, sub SubCategory, msg string, extra map[
 		Time("time", time.Now()).
 		Str("Category", string(cat)).
 		Str("SubCategory", string(sub)).
-		Fields(logParamsToZeroParams(extra)).
+		Interface("extra", logParamsToZeroParams(extra)).
 		Msg(msg)
 }
 

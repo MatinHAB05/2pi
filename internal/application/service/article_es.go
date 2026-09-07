@@ -57,6 +57,7 @@ func (s *articleSearchService) DeleteArticle(ctx context.Context, id int64) erro
 	return nil
 }
 
+// todo : add vector-search(dense or sparse vector!)
 func (s *articleSearchService) SearchArticles(ctx context.Context, req *service_contract.SearchArticleQueryRequest) (*service_contract.SearchArticleResponse, error) {
 	if req.Page <= 0 {
 		req.Page = 1

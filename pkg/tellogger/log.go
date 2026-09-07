@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type CloseFileLogger func()
@@ -33,19 +35,21 @@ func formatTelegramJSON(rawJSON string) string {
 
 func NewLogger(cmdLog bool) (Logger, CloseFileLogger) {
 	logsDir := "logs/telegram"
+	cleanlogsDir := "clean-logs/telegram"
+
 	if err := os.MkdirAll(logsDir, 0755); err != nil {
 		log.Fatalf("ERR: Failed to create logs directory: %v", err)
 	}
 
 	timeStamp := time.Now().Format("2006-01-02_15-04-05")
 
-	rawFileName := filepath.Join(logsDir, fmt.Sprintf("%s_raw.log", timeStamp))
+	rawFileName := filepath.Join(logsDir, fmt.Sprintf("%s-%s.log", timeStamp, uuid.New().String()))
 	rawFile, err := os.OpenFile(rawFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("ERR: Failed to create raw log file: %v", err)
 	}
 
-	cleanFileName := filepath.Join(logsDir, fmt.Sprintf("%s_clean.log", timeStamp))
+	cleanFileName := filepath.Join(cleanlogsDir, fmt.Sprintf("%s_clean.log", timeStamp))
 	cleanFile, err := os.OpenFile(cleanFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		rawFile.Close()

@@ -1,0 +1,20 @@
+name: filebeat
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    paths:
+      - "/var/log/app/*.log"
+    fields:
+      environment: Development
+    tags: ["2pi", "Telegram"]
+    parsers:
+      - multiline:
+          type: pattern
+          pattern: '^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\.\d{6}'
+          negate: true
+          match: after
+
+logging.level: debug
+
+output.logstash:
+  hosts: ["logstash:5045"]

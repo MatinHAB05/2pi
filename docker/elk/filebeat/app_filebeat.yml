@@ -1,0 +1,14 @@
+name: filebeat
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    paths:
+      - "/var/log/app/*.log"
+    fields:
+      environment: Development
+    tags: ["2pi", "API"]
+
+logging.level: debug
+
+output.logstash:
+  hosts: ["logstash:5044"]

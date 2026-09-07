@@ -1,15 +1,15 @@
 #!/bin/sh
 set -e
 
-ES_URL=${ES_URL:-"http://elasticsearch:9200"}
-ES_PASSWORD=${ES_PASSWORD:?ES_PASSWORD is required}
+ELASTIC_URL=${ELASTIC_URL:-"http://elasticsearch:9200"}
+ELASTIC_PASSWORD=${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required}
 KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:?KIBANA_SYSTEM_PASSWORD is required}
 
 INDEX_NAME="articles-v1"
 ALIAS_NAME="articles"
 
 echo "Waiting for Elasticsearch..."
-until curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/_cat/health?h=status" | grep -qE 'green|yellow'; do
+until curl -s -f -u "elastic:$ELASTIC_PASSWORD" "$ELASTIC_URL/_cat/health?h=status" | grep -qE 'green|yellow'; do
   sleep 2
 done
 
@@ -17,8 +17,8 @@ echo "Elasticsearch is up!"
 
 # 1. Configure kibana_system password
 echo "Setting kibana_system password..."
-curl -sS -f -X POST "$ES_URL/_security/user/kibana_system/_password" \
-  -u "elastic:$ES_PASSWORD" \
+curl -sS -f -X POST "$ELASTIC_URL/_security/user/kibana_system/_password" \
+  -u "elastic:$ELASTIC_PASSWORD" \
   -H "Content-Type: application/json" \
   -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}"
 echo "kibana_system password configured successfully."
@@ -26,10 +26,10 @@ echo ""
 
 # 2. Create Index with Settings & Mappings (if not exists)
 # TODO : Synonyms file
-if ! curl -s -f -u "elastic:$ES_PASSWORD" "$ES_URL/$INDEX_NAME" > /dev/null; then
+if ! curl -s -f -u "elastic:$ELASTIC_PASSWORD" "$ELASTIC_URL/$INDEX_NAME" > /dev/null; then
   echo "Creating index $INDEX_NAME..."
-  curl -sS  -X PUT "$ES_URL/$INDEX_NAME" \
-    -u "elastic:$ES_PASSWORD" \
+  curl -sS  -X PUT "$ELASTIC_URL/$INDEX_NAME" \
+    -u "elastic:$ELASTIC_PASSWORD" \
     -H "Content-Type: application/json" \
     -d '{
       "settings": {
@@ -159,21 +159,34 @@ else
   echo "Index $INDEX_NAME already exists, skipping creation."
 fi
 
-# 3. Setup Alias
-echo "Ensuring alias $ALIAS_NAME points to $INDEX_NAME..."
-curl -sS -f -X POST "$ES_URL/_aliases" \
-  -u "elastic:$ES_PASSWORD" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "actions": [
-      {
-        "add": {
-          "index": "'"$INDEX_NAME"'",
-          "alias": "'"$ALIAS_NAME"'"
-        }
-      }
-    ]
-  }'
-echo ""
 
-echo "Elasticsearch setup completed successfully!"
+
+# 3. Setup Alias if not exists
+if curl -s  -u "elastic:$ELASTIC_PASSWORD" "$ELASTIC_URL/_alias/$ALIAS_NAME" > /dev/null; then
+  echo "Alias '$ALIAS_NAME' already exists. Skipping creation."
+else
+  # Ensure the target index exists before pointing the alias to it
+  if ! curl -s  -u "elastic:$ELASTIC_PASSWORD" "$ELASTIC_URL/$INDEX_NAME" > /dev/null; then
+    echo "Creating target index '$INDEX_NAME' for alias..."
+    curl -sS  -X PUT "$ELASTIC_URL/$INDEX_NAME" -u "elastic:$ELASTIC_PASSWORD"
+    echo ""
+  fi
+
+  echo "Ensuring alias $ALIAS_NAME points to $INDEX_NAME..."
+  curl -sS  -X POST "$ELASTIC_URL/_aliases" \
+    -u "elastic:$ELASTIC_PASSWORD" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "actions": [
+        {
+          "add": {
+            "index": "'"$INDEX_NAME"'",
+            "alias": "'"$ALIAS_NAME"'"
+          }
+        }
+      ]
+    }'
+  echo "\nAlias '$ALIAS_NAME' created successfully."
+fi
+
+echo ""

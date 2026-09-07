@@ -1,0 +1,166 @@
+services:
+  db:
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    container_name: ${POSTGRES_CONTAINER:-2pi_postgres_db}
+    restart: always
+    environment:
+      POSTGRES_USER: ${PDB_USER}
+      POSTGRES_PASSWORD: ${PDB_PASSWORD}
+      POSTGRES_DB: ${PDB_DB_NAME}
+      TZ: ${PDB_TZ:-UTC}
+    ports:
+      - "${POSTGRES_HOST_PORT:-15015}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - 2pi_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PDB_USER} -d ${PDB_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:${REDIS_VERSION:-7}-alpine
+    container_name: ${REDIS_CONTAINER:-2pi_redis_db}
+    restart: always
+    command: redis-server --requirepass ${RDB_PASSWORD}
+    ports:
+      - "${REDIS_HOST_PORT:-15016}:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - 2pi_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${RDB_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.5.1}
+    container_name: ${ELASTIC_CONTAINER:-2pi_elasticsearch}
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "${ELASTIC_HOST_PORT:-15018}:9200"
+    volumes:
+      - ./elk/elastic/synonyms.txt:/usr/share/elasticsearch/config/synonyms.txt:ro
+    networks:
+      - 2pi_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -u elastic:${ELASTIC_PASSWORD} -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  init-es:
+    image: curlimages/curl:latest
+    container_name: ${INIT_ELASTIC_CONTAINER}
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD}
+      ELASTIC_URL: "http://elasticsearch:9200"
+    volumes:
+      - ./../scripts/es-init.sh:/es-init.sh:ro
+      - ./../scripts/app-template.sh:/app-template.sh:ro
+      - ./../scripts/tel-template.sh:/tel-template.sh:ro
+    entrypoint: ["/bin/sh", "-c", "/app-template.sh && /tel-template.sh && /es-init.sh"]
+    networks:
+      - 2pi_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-9.5.1}
+    container_name: ${KIBANA_CONTAINER:-2pi_kibana}
+    restart: always
+    ports:
+      - "${KIBANA_HOST_PORT:-15019}:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_SECURITY_ENCRYPTIONKEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_REPORTING_ENCRYPTIONKEY}
+      - XPACK_ALERTING_ENABLED=true
+      - XPACK_ACTIONS_ENABLED=true
+    depends_on:
+      init-es:
+        condition: service_completed_successfully
+    networks:
+      - 2pi_network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${LOGSTASH_VERSION:-9.5.1}
+    container_name: ${LOGSTASH_CONTAINER}
+    ports:
+      - "${LOGSTASH_HOST_PORT}:9600"
+      - "${LOGSTASH_APP_BEATS_PORT}:5044"
+      - "${LOGSTASH_TEL_BEATS_PORT}:5045"
+
+    volumes:
+      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    networks:
+      - 2pi_network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  filebeat-app:
+    image: docker.elastic.co/beats/filebeat:${FILEBEAT_VERSION}
+    container_name: ${FILEBEAT_APP_CONTAINER}
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./elk/filebeat/app_filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ../logs/app:/var/log/app:ro
+    environment:
+      - LOGSTASH_HOSTS=logstash:5044
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    networks:
+      - 2pi_network
+    depends_on:
+      - logstash
+    restart: unless-stopped
+
+  filebeat-telegram:
+    image: docker.elastic.co/beats/filebeat:${FILEBEAT_VERSION}
+    container_name: ${FILEBEAT_TELEGRAM_CONTAINER:-2pi_telegram_filebeat}
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./elk/filebeat/tel_filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ../logs/telegram:/var/log/app:ro
+    environment:
+      - LOGSTASH_HOSTS=logstash:5045
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    networks:
+      - 2pi_network
+    depends_on:
+      - logstash
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  es_data:
+
+networks:
+  2pi_network:
+    driver: bridge

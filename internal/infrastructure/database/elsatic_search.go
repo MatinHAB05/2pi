@@ -46,7 +46,7 @@ func NewTypedElasticSearchDatabase(elasticConfig *config.ElasticSearchConfig, el
 
 		client, err := elasticsearch.NewTyped(
 			elasticsearch.WithAddresses(fmt.Sprintf("http://%s:%d", elasticConfig.Host, elasticConfig.Port)),
-			elasticsearch.WithLogger(&elastictransport.ColorLogger{ //TODO
+			elasticsearch.WithLogger(&elastictransport.JSONLogger{ //TODO
 				Output:             file,
 				EnableRequestBody:  true,
 				EnableResponseBody: true,

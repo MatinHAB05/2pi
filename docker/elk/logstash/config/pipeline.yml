@@ -1,0 +1,7 @@
+- pipeline.id: app_logs
+  #pipeline.batch.size: 125
+  path.config: "/usr/share/logstash/pipeline/app.conf"
+
+- pipeline.id: telegram_logs
+  # pipeline.batch.size: 1
+  path.config: "/usr/share/logstash/pipeline/telegram.conf"

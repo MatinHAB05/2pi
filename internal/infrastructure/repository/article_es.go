@@ -95,9 +95,9 @@ func (r *articleESTypedRepository) Search(ctx context.Context, keyword string, p
 		return nil, fmt.Errorf("%w: %v", exception.ErrSearchFailed, err)
 	}
 
-	articles := make([]*repository_contract.ArticleDocument, 0, min(len(res.Hits.Hits), size))
+	articles := make([]*repository_contract.ArticleDocumentResponse, 0, min(len(res.Hits.Hits), size))
 	for i := range res.Hits.Hits {
-		var doc repository_contract.ArticleDocument
+		var doc repository_contract.ArticleDocumentResponse
 		if err := json.Unmarshal(res.Hits.Hits[i].Source_, &doc); err != nil {
 			return nil, fmt.Errorf("%w [index=%d]: %v", exception.ErrUnmarshalFailed, i, err)
 		}

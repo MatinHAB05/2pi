@@ -53,10 +53,11 @@ type Redis struct {
 }
 
 type LoggerConfig struct {
-	FilePath string `mapstructure:"LOGGER_FILE_PATH" json:"file_path"`
-	Encoding string `mapstructure:"LOGGER_ENCODING"  json:"encoding"`
-	Level    string `mapstructure:"LOGGER_LEVEL"     json:"level"`
-	Logger   string `mapstructure:"LOGGER_NAME"      json:"logger"`
+	FilePath      string `mapstructure:"LOGGER_FILE_PATH" json:"file_path"`
+	CleanFilePath string `mapstructure:"LOGGER_CLEAN_FILE_PATH" json:"clean_file_path"`
+	Encoding      string `mapstructure:"LOGGER_ENCODING"  json:"encoding"`
+	Level         string `mapstructure:"LOGGER_LEVEL"     json:"level"`
+	Logger        string `mapstructure:"LOGGER_NAME"      json:"logger"`
 }
 
 type Casbin struct {
@@ -71,10 +72,10 @@ type EmailConfig struct {
 }
 
 type ElasticSearchConfig struct {
-	Host        string `mapstructure:"ES_HOST"      json:"host"`
-	Port        int    `mapstructure:"ES_PORT"      json:"port"`
-	Password    string `mapstructure:"ES_PASSWORD"  json:"password"`
-	LogFilePath string `mapstructure:"ES_LOG_PATH"  json:"log_path"`
+	Host        string `mapstructure:"ELASTIC_HOST"      json:"host"`
+	Port        int    `mapstructure:"ELASTIC_PORT"      json:"port"`
+	Password    string `mapstructure:"ELASTIC_PASSWORD"  json:"password"`
+	LogFilePath string `mapstructure:"ELASTIC_LOG_PATH"  json:"log_path"`
 }
 
 func NewEnvironment() *Environment {

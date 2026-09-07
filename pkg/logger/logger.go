@@ -1,11 +1,12 @@
 package logger
 
 type Config struct {
-	FilePath  string
-	Encoding  string
-	Level     string
-	CleanMode bool
-	Logger    string
+	FilePath      string
+	CleanFilePath string
+	Encoding      string
+	Level         string
+	CleanMode     bool
+	Logger        string
 }
 
 type Logger interface {

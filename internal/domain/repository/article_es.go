@@ -6,6 +6,22 @@ import (
 )
 
 type ArticleDocument struct {
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	DeletedAt   time.Time `json:"deleted_at"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	ImageURL    string    `json:"image_url"`
+	URL         string    `json:"url"`
+}
+
+type ArticleHighlights struct {
+	Title       []string `json:"tilte"`
+	Description []string `json:"description"`
+}
+
+type ArticleDocumentResponse struct {
 	ID          string            `json:"id"`
 	CreatedAt   time.Time         `json:"created_at"`
 	UpdatedAt   time.Time         `json:"updated_at"`
@@ -17,13 +33,8 @@ type ArticleDocument struct {
 	Highlights  ArticleHighlights `json:"highlights"`
 }
 
-type ArticleHighlights struct {
-	Title       []string `json:"tilte"`
-	Description []string `json:"description"`
-}
-
 type ArticleSearchResult struct {
-	Articles []*ArticleDocument
+	Articles []*ArticleDocumentResponse
 	Total    int
 }
 

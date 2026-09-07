@@ -48,11 +48,12 @@ func main() {
 	defer closeLF()
 
 	appLogger := logger.NewLogger(logger.Config{
-		Logger:    cfg.Environment.Logger.Logger,
-		FilePath:  cfg.Environment.Logger.FilePath,
-		Encoding:  cfg.Environment.Logger.Encoding,
-		Level:     cfg.Environment.Logger.Level,
-		CleanMode: cfg.Environment.ModeOptions.Debug,
+		Logger:        cfg.Environment.Logger.Logger,
+		FilePath:      cfg.Environment.Logger.FilePath,
+		Encoding:      cfg.Environment.Logger.Encoding,
+		Level:         cfg.Environment.Logger.Level,
+		CleanMode:     cfg.Environment.ModeOptions.Debug,
+		CleanFilePath: cfg.Environment.Logger.CleanFilePath,
 	})
 	appLogger.Info(logger.General, logger.Startup, "starting application bootstrapping", nil)
 
